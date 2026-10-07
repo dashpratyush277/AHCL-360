@@ -1,0 +1,13 @@
+# Local MongoDB for development. Start with: docker compose up -d
+# Then set MONGO_URI=mongodb://localhost:27017/ahcl360 in backend/.env and run `npm run seed`.
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
