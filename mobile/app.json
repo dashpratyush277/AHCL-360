@@ -74,6 +74,13 @@
     ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d00b2cd9-e420-4a36-bea2-ab8f41f96302"
+      }
+    },
+    "owner": "pratyush2777"
   }
 }
