@@ -14,7 +14,46 @@ function defaultBase() {
   if (host) return `http://${host}:4000/api`;
   return Platform.OS === 'android' ? 'http://10.0.2.2:4000/api' : 'http://localhost:4000/api';
 }
-export const API_URL = defaultBase();
+export const DEFAULT_API_URL = defaultBase();
+
+// Optional override saved on the device (login screen → "Server address"), so a test APK can be
+// pointed at a different server without rebuilding.
+const URL_KEY = 'ahcl_api_url';
+let apiUrl = DEFAULT_API_URL;
+export const getApiUrl = () => apiUrl;
+export async function loadApiUrl() {
+  try {
+    apiUrl = (await SecureStore.getItemAsync(URL_KEY)) || DEFAULT_API_URL;
+  } catch {
+    apiUrl = DEFAULT_API_URL;
+  }
+  return apiUrl;
+}
+export async function setApiUrl(url) {
+  const clean = url?.trim().replace(/\/+$/, '');
+  if (!clean || clean === DEFAULT_API_URL) {
+    await SecureStore.deleteItemAsync(URL_KEY);
+    apiUrl = DEFAULT_API_URL;
+  } else {
+    await SecureStore.setItemAsync(URL_KEY, clean);
+    apiUrl = clean;
+  }
+  return apiUrl;
+}
+
+/** Ping /health on a candidate URL; resolves true/false within ~6 s. */
+export async function testApiUrl(url) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const res = await fetch(`${url.trim().replace(/\/+$/, '')}/health`, { signal: ctrl.signal });
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(t);
+  }
+}
 
 const KEY = 'ahcl_session';
 let session = null;
@@ -27,6 +66,7 @@ export const onSessionChange = (fn) => {
 };
 
 export async function loadSession() {
+  await loadApiUrl(); // also needed by the background GPS task, which starts without the UI
   try {
     session = JSON.parse((await SecureStore.getItemAsync(KEY)) || 'null');
   } catch {
@@ -57,7 +97,7 @@ export class ApiError extends Error {
 let refreshing = null;
 async function refresh() {
   refreshing ??= (async () => {
-    const res = await fetch(`${API_URL}/auth/refresh`, {
+    const res = await fetch(`${apiUrl}/auth/refresh`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ refreshToken: session?.refreshToken }),
@@ -81,7 +121,7 @@ async function request(method, path, body, retry = true) {
 
   let res;
   try {
-    res = await fetch(`${API_URL}${path}`, { method, headers, body: isForm ? body : body !== undefined ? JSON.stringify(body) : undefined });
+    res = await fetch(`${apiUrl}${path}`, { method, headers, body: isForm ? body : body !== undefined ? JSON.stringify(body) : undefined });
   } catch {
     throw new ApiError(0);
   }
@@ -90,6 +130,8 @@ async function request(method, path, body, retry = true) {
     return request(method, path, body, false);
   }
   const data = await res.json().catch(() => null);
+  // Account blocked by an admin: end the session on this device immediately.
+  if (res.status === 403 && /blocked/i.test(data?.error || '') && session) await setSession(null);
   if (!res.ok) throw new ApiError(res.status, data);
   return data;
 }
@@ -116,7 +158,7 @@ export const api = {
     await request('GET', '/auth/me');
     const dest = new File(Paths.cache, filename.replace(/[^\w.-]+/g, '_'));
     if (dest.exists) dest.delete();
-    const file = await File.downloadFileAsync(`${API_URL}${path}`, dest, { headers: { Authorization: `Bearer ${session.accessToken}` } });
+    const file = await File.downloadFileAsync(`${apiUrl}${path}`, dest, { headers: { Authorization: `Bearer ${session.accessToken}` } });
     if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(file.uri);
     return file.uri;
   },

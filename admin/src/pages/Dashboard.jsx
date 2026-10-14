@@ -1,5 +1,5 @@
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Card, ErrorBox, PageHeader, Spinner, Stat } from '../components/ui.jsx';
+import { Badge, Card, ErrorBox, PageHeader, Spinner, Stat } from '../components/ui.jsx';
 import { inr, inrCompact, label } from '../lib/format';
 import { useApi } from '../lib/hooks';
 
@@ -50,6 +50,30 @@ function HBar({ data, dataKey, nameKey, money, name }) {
   );
 }
 
+function Integrations() {
+  const { data: s, error } = useApi('/admin/system-status');
+  if (error || !s) return null; // managers don't have access
+  const row = (name, ok, detail) => (
+    <tr key={name}>
+      <td>{name}</td>
+      <td><Badge status={ok ? 'approved' : 'pending'}>{ok ? 'Live' : 'Not configured'}</Badge></td>
+      <td className="muted">{detail}</td>
+    </tr>
+  );
+  return (
+    <Card title="Integrations" className="integrations">
+      <table className="table">
+        <tbody>
+          {row('SMS OTP', s.sms.provider !== 'console' && !s.sms.problems.length, s.sms.problems.length ? s.sms.problems.join('; ') : `Provider: ${s.sms.provider}${s.sms.devOtpShownOnScreen ? ' · dev OTP shown on screen' : ''}`)}
+          {row('Push notifications (FCM)', s.push.enabled, s.push.enabled ? `${s.push.devices} device(s) registered by ${s.push.usersWithDevices} user(s)` : s.push.error || 'Set FIREBASE_SERVICE_ACCOUNT on the server')}
+          {row('Email OTP', s.email.configured, s.email.configured ? 'SMTP configured' : 'Optional – set SMTP_HOST')}
+          {row('Database', !s.database.inMemory, s.database.inMemory ? 'Temporary in-memory database – data resets on restart' : 'Persistent MongoDB')}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
 export default function Dashboard() {
   const { data: d, error } = useApi('/analytics/dashboard');
   const { data: c } = useApi('/analytics/charts?months=6');
@@ -91,6 +115,9 @@ export default function Dashboard() {
           )}
         </div>
       )}
+      <div style={{ marginTop: 16 }}>
+        <Integrations />
+      </div>
     </>
   );
 }

@@ -42,7 +42,8 @@ export async function savePings(user, points) {
   // Only store points recorded within office hours (tracking is a work-time feature).
   const allowed = points.filter((p) => isWithinOfficeHours(user.officeHours, p.recordedAt));
   if (allowed.length) await LocationPing.insertMany(allowed.map((p) => ({ ...p, user: user._id })), { ordered: false });
-  return { accepted: allowed.length, ignored: points.length - allowed.length };
+  // Echo the current schedule so the phone picks up office-hour changes and stops tracking on time.
+  return { accepted: allowed.length, ignored: points.length - allowed.length, trackingActive: isWithinOfficeHours(user.officeHours), officeHours: user.officeHours };
 }
 
 /** Batch upload of GPS points (background task / offline buffer). */

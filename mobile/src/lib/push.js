@@ -21,6 +21,21 @@ function loadNotifications() {
   return Notifications;
 }
 
+export const pushAvailable = () => !isRunningInExpoGo();
+
+let listenersAttached = false;
+/**
+ * Tapping a push opens the in-app notification list; a rotated FCM token is re-registered.
+ * Call once at app start (after the router is mounted).
+ */
+export function attachPushListeners(onOpen) {
+  const N = loadNotifications();
+  if (!N || listenersAttached) return;
+  listenersAttached = true;
+  N.addNotificationResponseReceivedListener(() => onOpen?.());
+  N.addPushTokenListener(({ data }) => api.post('/auth/fcm-token', { token: data }).catch(() => {}));
+}
+
 /** Registers the device's native FCM/APNs token with the backend. No-op in Expo Go. */
 export async function registerForPush() {
   try {

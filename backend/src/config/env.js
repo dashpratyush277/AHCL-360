@@ -35,8 +35,10 @@ export const env = {
   otp: {
     ttlMinutes: Number(process.env.OTP_TTL_MINUTES || 5),
     maxAttempts: Number(process.env.OTP_MAX_ATTEMPTS || 5),
-    // When true (dev only) the OTP is returned in the API response instead of being sent by SMS.
+    // When true (dev only) the OTP is also returned in the API response for testing.
     exposeInResponse: !isProd && process.env.OTP_EXPOSE !== 'false',
+    // Throttle: minimum seconds between OTP requests for the same number.
+    resendSeconds: Number(process.env.OTP_RESEND_SECONDS || 30),
   },
 
   uploadDir: process.env.UPLOAD_DIR || 'uploads',
@@ -57,8 +59,41 @@ export const env = {
     supportEmail: process.env.SUPPORT_EMAIL || 'support@example.com',
   },
 
-  // Path to a Firebase service-account JSON. When unset, push notifications are logged only.
+  // Firebase service account for FCM push: a file path (FIREBASE_SERVICE_ACCOUNT) or the JSON
+  // itself base64-encoded (FIREBASE_SERVICE_ACCOUNT_BASE64, convenient on hosting platforms).
   firebaseServiceAccount: process.env.FIREBASE_SERVICE_ACCOUNT || '',
-  // Optional HTTP SMS gateway; when unset OTPs are logged to the console.
-  smsWebhookUrl: process.env.SMS_WEBHOOK_URL || '',
+  firebaseServiceAccountBase64: process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '',
+
+  sms: {
+    // fast2sms | msg91 | twilio | webhook | console (default console in dev, webhook if SMS_WEBHOOK_URL set)
+    provider: (process.env.SMS_PROVIDER || (process.env.SMS_WEBHOOK_URL ? 'webhook' : 'console')).toLowerCase(),
+    countryCode: process.env.SMS_COUNTRY_CODE || '91',
+    webhookUrl: process.env.SMS_WEBHOOK_URL || '',
+    fast2sms: {
+      apiKey: process.env.FAST2SMS_API_KEY || '',
+      senderId: process.env.FAST2SMS_SENDER_ID || '',
+      messageId: process.env.FAST2SMS_DLT_MESSAGE_ID || '',
+    },
+    msg91: {
+      authKey: process.env.MSG91_AUTH_KEY || '',
+      templateId: process.env.MSG91_TEMPLATE_ID || '',
+      otpVar: process.env.MSG91_OTP_VAR || 'otp',
+    },
+    twilio: {
+      accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+      authToken: process.env.TWILIO_AUTH_TOKEN || '',
+      from: process.env.TWILIO_FROM || '',
+    },
+  },
+
+  smtp: {
+    host: process.env.SMTP_HOST || '',
+    port: Number(process.env.SMTP_PORT || 587),
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.SMTP_FROM || 'AHCL 360 <no-reply@example.com>',
+  },
+
+  // Serve the built admin panel (admin/dist) from the API so both share one domain.
+  adminDir: process.env.ADMIN_DIST_DIR || '',
 };

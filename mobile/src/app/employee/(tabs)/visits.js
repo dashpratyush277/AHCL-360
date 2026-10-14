@@ -1,25 +1,47 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { Badge, Button, Card, Empty, KV, ListItem, Row, Screen, Section, T, useBusy } from '../../../components/ui';
 import { api } from '../../../lib/api';
 import { dt, time, today } from '../../../lib/format';
 import { useApi } from '../../../lib/hooks';
-import { submitOrQueue } from '../../../lib/offline';
+import { clearCurrentVisit, getCurrentVisit, submitOrQueue } from '../../../lib/offline';
 import { currentPosition } from '../../../lib/tracking';
 
 export default function Visits() {
   const [day, setDay] = useState(today());
   const list = useApi(`/visits?date=${day}&from=${day}&to=${day}&limit=100`);
   const recent = useApi('/visits?limit=15');
+  const [local, setLocal] = useState(null); // open visit remembered on the device
   const [run, busy] = useBusy();
   const items = list.data?.items || [];
-  const open = items.find((v) => !v.checkOut?.time);
+  const serverOpen = items.find((v) => !v.checkOut?.time);
+
+  useFocusEffect(
+    useCallback(() => {
+      getCurrentVisit().then(setLocal);
+    }, []),
+  );
+
+  // Once the server confirms the stored visit is finished, forget it.
+  const localDone = Boolean(local && !list.error && day === today() && items.some((v) => v.clientId === local.clientId && v.checkOut?.time));
+  useEffect(() => {
+    if (localDone) clearCurrentVisit().then(() => setLocal(null));
+  }, [localDone]);
+
+  // Prefer the server's view; fall back to the device copy when offline or not yet synced.
+  const open = serverOpen
+    ? { ref: serverOpen._id, clientName: serverOpen.clientName, purpose: serverOpen.purpose, time: serverOpen.checkIn.time, distanceKm: serverOpen.distanceKm, locationValid: serverOpen.locationValid, locationRemark: serverOpen.locationRemark }
+    : local && !localDone
+      ? { ...local, pendingSync: local.offline || Boolean(list.error) }
+      : null;
 
   const checkOut = (v) =>
     run(async () => {
       const pos = await currentPosition();
-      const r = await submitOrQueue('visit.checkOut', { ...pos, visitId: v._id, time: new Date().toISOString() }, (p) => api.post(`/visits/${v._id}/check-out`, p));
+      const r = await submitOrQueue('visit.checkOut', { ...pos, visitId: v.ref, time: new Date().toISOString() }, (p) => api.post(`/visits/${encodeURIComponent(v.ref)}/check-out`, p));
+      await clearCurrentVisit();
+      setLocal(null);
       if (r.queued) Alert.alert('Saved offline', 'Check-out will sync when you are online.');
       else if (r.result?.locationValid === false) Alert.alert('Location mismatch', r.result.locationRemark);
       list.reload();
@@ -34,12 +56,13 @@ export default function Visits() {
   return (
     <Screen onRefresh={() => Promise.all([list.reload(), recent.reload()])} refreshing={list.loading}>
       {open ? (
-        <Card title="Visit in progress" right={<Badge status="in_progress" />}>
+        <Card title="Visit in progress" right={<Badge status={open.pendingSync ? 'queued' : 'in_progress'} text={open.pendingSync ? 'Saved offline' : undefined} />}>
           <KV k="Client" v={open.clientName} />
           <KV k="Purpose" v={open.purpose} />
-          <KV k="Checked in" v={time(open.checkIn.time)} />
-          <KV k="Distance travelled" v={`${open.distanceKm} km`} />
-          {!open.locationValid && <T size={12} muted>{open.locationRemark}</T>}
+          <KV k="Checked in" v={time(open.time)} />
+          {open.distanceKm != null && <KV k="Distance travelled" v={`${open.distanceKm} km`} />}
+          {open.locationValid === false && <T size={12} muted>{open.locationRemark}</T>}
+          {open.pendingSync && <T size={12} muted>Not synced yet – distance and location check are calculated after sync.</T>}
           <Button title="Check out" variant="danger" icon="log-out-outline" loading={busy} onPress={() => checkOut(open)} />
         </Card>
       ) : (

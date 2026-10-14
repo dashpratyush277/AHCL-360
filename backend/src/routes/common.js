@@ -5,7 +5,7 @@ import { ADMINS, isAdmin } from '../config/roles.js';
 import { authorize } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { Notification, Ticket, User, nextNumber } from '../models/index.js';
-import { notify } from '../services/messaging.js';
+import { notify, pushStatus } from '../services/messaging.js';
 import { notFound, paged } from '../utils/http.js';
 
 const r = Router();
@@ -45,6 +45,13 @@ r.post('/notifications/read', validate(z.object({ ids: z.array(objectId).optiona
   const filter = { user: req.user._id, ...(req.valid.body.ids ? { _id: { $in: req.valid.body.ids } } : {}) };
   await Notification.updateMany(filter, { read: true });
   res.json({ ok: true });
+});
+
+/** Sends a push to the caller's own devices – used to verify FCM on a real phone. */
+r.post('/notifications/test', async (req, res) => {
+  const devices = (await User.findById(req.user._id).select('+fcmTokens')).fcmTokens.length;
+  const result = await notify(req.user._id, { title: 'Test notification', body: `Push is working on this device, ${req.user.name.split(' ')[0]}.`, type: 'system' });
+  res.json({ devices, ...result, push: await pushStatus() });
 });
 
 /* ------------------------------ Support ------------------------------ */

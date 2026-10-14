@@ -1,0 +1,50 @@
+# Render Blueprint – one web service (API + admin panel) with a persistent disk for uploads.
+# Render dashboard → New → Blueprint → select this repo. Then fill in the "sync: false" values.
+# Database: create a free/paid cluster on MongoDB Atlas and paste its connection string as MONGO_URI.
+services:
+  - type: web
+    name: ahcl360
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter # persistent disks need a paid plan
+    region: singapore
+    healthCheckPath: /api/health
+    disk:
+      name: uploads
+      mountPath: /data
+      sizeGB: 5
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      # 64 hex characters – generate once, store safely, NEVER change (encrypted data depends on it)
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: OTP_EXPOSE
+        value: "false"
+      - key: SMS_PROVIDER
+        sync: false
+      - key: FAST2SMS_API_KEY
+        sync: false
+      - key: FAST2SMS_SENDER_ID
+        sync: false
+      - key: FAST2SMS_DLT_MESSAGE_ID
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_BASE64
+        sync: false
+      - key: COMPANY_NAME
+        value: AHCL
+      - key: COMPANY_GSTIN
+        sync: false
+      - key: COMPANY_ADDRESS
+        sync: false
+      - key: COMPANY_STATE_CODE
+        value: "21"
+      # set to "true" only on a demo server to load the demo accounts into an empty database
+      - key: SEED_DEMO
+        value: "false"

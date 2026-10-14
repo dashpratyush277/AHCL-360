@@ -35,7 +35,13 @@ async function uploadBuffer(force = false) {
   await AsyncStorage.setItem(BUFFER_KEY, '[]');
   try {
     if (!getSession()) await loadSession();
-    await api.post('/tracking/pings', { points: buf });
+    const res = await api.post('/tracking/pings', { points: buf });
+    // Keep the cached schedule in sync with the server (an admin may have changed office hours).
+    if (res?.officeHours) {
+      const cfg = JSON.parse((await AsyncStorage.getItem(CONFIG_KEY)) || '{}');
+      await AsyncStorage.setItem(CONFIG_KEY, JSON.stringify({ ...cfg, officeHours: res.officeHours }));
+    }
+    return res;
   } catch (e) {
     if (e.isNetwork) await enqueue('tracking.pings', { points: buf });
   }
@@ -55,7 +61,9 @@ TaskManager.defineTask(TRACKING_TASK, async ({ data, error }) => {
     buf.push({ lat: l.coords.latitude, lng: l.coords.longitude, accuracy: l.coords.accuracy, speed: l.coords.speed, recordedAt: new Date(l.timestamp).toISOString() });
   }
   await AsyncStorage.setItem(BUFFER_KEY, JSON.stringify(buf.slice(-2000)));
-  await uploadBuffer();
+  const res = await uploadBuffer();
+  // Server says duty hours are over (e.g. admin shortened them) -> stop now.
+  if (res?.trackingActive === false) await Location.stopLocationUpdatesAsync(TRACKING_TASK).catch(() => {});
 });
 
 export async function isTracking() {

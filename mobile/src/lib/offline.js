@@ -42,11 +42,11 @@ export async function enqueue(type, payload) {
 export async function submitOrQueue(type, payload, online) {
   const withId = { ...payload, clientId: payload.clientId || randomUUID() };
   try {
-    return { queued: false, result: await online(withId) };
+    return { queued: false, clientId: withId.clientId, result: await online(withId) };
   } catch (e) {
     if (!e.isNetwork) throw e;
     await enqueue(type, withId);
-    return { queued: true };
+    return { queued: true, clientId: withId.clientId };
   }
 }
 
@@ -90,4 +90,22 @@ export function startAutoSync() {
     if (s.isConnected && s.isInternetReachable !== false) flushQueue();
   });
   flushQueue();
+}
+
+/* ---- Current client visit, remembered on the device so it can be checked out offline ---- */
+
+const VISIT_KEY = 'ahcl_current_visit_v1';
+
+/** visit: { ref, clientId, clientName, purpose, time } – ref is the server id or 'client:<clientId>' */
+export const saveCurrentVisit = (visit) => AsyncStorage.setItem(VISIT_KEY, JSON.stringify(visit));
+export const clearCurrentVisit = () => AsyncStorage.removeItem(VISIT_KEY);
+export async function getCurrentVisit() {
+  try {
+    return JSON.parse((await AsyncStorage.getItem(VISIT_KEY)) || 'null');
+  } catch {
+    return null;
+  }
+}
+export async function pendingOps() {
+  return read(QUEUE_KEY);
 }

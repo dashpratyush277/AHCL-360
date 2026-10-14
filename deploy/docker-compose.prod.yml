@@ -1,0 +1,44 @@
+# Self-hosted production on any Linux server (AWS EC2 / Lightsail, Google Compute Engine, DigitalOcean...).
+#   1. Point a DNS A record (e.g. app.ahcl.in) at the server.
+#   2. cp backend/.env.example deploy/.env  and fill it in (MONGO_URI is set below).
+#   3. DOMAIN=app.ahcl.in docker compose -f deploy/docker-compose.prod.yml up -d --build
+# Caddy obtains and renews the HTTPS certificate automatically.
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MONGO_URI: mongodb://mongo:27017/ahcl360
+    volumes:
+      - uploads:/data
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    # Not published to the internet – only the app container can reach it.
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN, e.g. DOMAIN=app.ahcl.in}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - app
+
+volumes:
+  uploads:
+  mongo-data:
+  caddy-data:

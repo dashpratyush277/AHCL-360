@@ -4,7 +4,7 @@ import { Alert } from 'react-native';
 import { Button, Card, Chips, Input, ListItem, Screen, T, useBusy } from '../../components/ui';
 import { api, qs } from '../../lib/api';
 import { useApi } from '../../lib/hooks';
-import { submitOrQueue } from '../../lib/offline';
+import { saveCurrentVisit, submitOrQueue } from '../../lib/offline';
 import { currentPosition } from '../../lib/tracking';
 
 const PURPOSES = ['Order collection', 'Product demo', 'Payment follow-up', 'New retailer', 'Stock audit', 'Complaint', 'Other'];
@@ -35,7 +35,16 @@ export default function VisitNew() {
         time: new Date().toISOString(),
       };
       const r = await submitOrQueue('visit.create', payload, (p) => api.post('/visits', p));
-      if (r.queued) Alert.alert('Saved offline', 'The visit will sync when you are online.');
+      // Remember the open visit on the device so it can be checked out even without internet.
+      await saveCurrentVisit({
+        ref: r.queued ? `client:${r.clientId}` : r.result._id,
+        clientId: r.clientId,
+        clientName: payload.clientName,
+        purpose,
+        time: payload.time,
+        offline: r.queued,
+      });
+      if (r.queued) Alert.alert('Saved offline', 'The visit will sync when you are online. You can check out as usual.');
       else if (r.result.locationValid === false) Alert.alert('Location mismatch', r.result.locationRemark);
       router.back();
     });

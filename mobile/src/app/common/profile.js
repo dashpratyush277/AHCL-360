@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { Button, Card, Input, KV, Screen, T, useBusy } from '../../components/ui';
 import { api, getSession, setSession } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { pushAvailable, registerForPush } from '../../lib/push';
 import { date, label } from '../../lib/format';
 
 export default function Profile() {
@@ -50,6 +51,35 @@ export default function Profile() {
         <Input label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
         <Input label="Address" value={address} onChangeText={setAddress} multiline />
         <Button title="Save profile" loading={busy} onPress={saveProfile} />
+      </Card>
+      <Card title="Push notifications">
+        <T muted size={12}>
+          {pushAvailable()
+            ? 'Sends a test notification to this phone through Firebase Cloud Messaging.'
+            : 'Push notifications need the installed AHCL 360 app (not Expo Go). In-app notifications still work.'}
+        </T>
+        <Button
+          title="Send test notification"
+          variant="soft"
+          loading={busy}
+          disabled={!pushAvailable()}
+          onPress={() =>
+            run(async () => {
+              await registerForPush();
+              const r = await api.post('/notifications/test', {});
+              Alert.alert(
+                r.pushed ? 'Sent' : 'Not delivered as push',
+                r.pushed
+                  ? 'A notification should appear on this phone in a few seconds.'
+                  : !r.push?.enabled
+                    ? 'The server has no Firebase credentials yet (FIREBASE_SERVICE_ACCOUNT). It was saved to your in-app notifications.'
+                    : r.devices === 0
+                      ? 'This phone has not registered for push. Allow notifications for the app and try again.'
+                      : 'Firebase did not accept the message. Check the server log.',
+              );
+            })
+          }
+        />
       </Card>
       <Card title="Change password">
         <T muted size={12}>If you only use OTP login, leave the current password empty to set one.</T>

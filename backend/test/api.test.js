@@ -52,6 +52,16 @@ describe('auth', () => {
     assert.equal(reuse.status, 401, 'rotated refresh token must not be reusable');
   });
 
+  test('OTP accepts any mobile format and throttles resends', async () => {
+    const r1 = await request(app).post('/api/auth/otp/request').send({ identifier: '+91 90000 00004', panel: 'employee' });
+    assert.equal(r1.status, 200, JSON.stringify(r1.body));
+    const again = await request(app).post('/api/auth/otp/request').send({ identifier: '9000000004', panel: 'employee' });
+    assert.equal(again.status, 429, 'second request within the resend window is throttled');
+    const ok = await request(app).post('/api/auth/otp/verify').send({ identifier: '09000000004', code: r1.body.devCode, panel: 'employee' });
+    assert.equal(ok.status, 200, JSON.stringify(ok.body));
+    assert.equal(ok.body.user.mobile, '9000000004');
+  });
+
   test('panel separation', async () => {
     const res = await request(app).post('/api/auth/login').send({ identifier: '9100000002', password: 'Password@123', panel: 'employee' });
     assert.equal(res.status, 403);
@@ -165,6 +175,35 @@ describe('employee panel', () => {
     assert.equal(r1.body.results[0].status, 'ok', JSON.stringify(r1.body));
     const r2 = await as('manager').post('/api/sync', { ops: [op] });
     assert.equal(r2.body.results[0].status, 'duplicate');
+    // close it so the next test can start a new visit
+    const out = await as('manager').post('/api/sync', { ops: [{ clientId: 'offline-op-0002', type: 'visit.checkOut', payload: { visitId: `client:${op.clientId}`, lat: 20.3, lng: 85.82 } }] });
+    assert.equal(out.body.results[0].status, 'ok', JSON.stringify(out.body));
+  });
+
+  test('visit started AND finished offline syncs in one batch', async () => {
+    const t0 = new Date(Date.now() - 30 * 60_000).toISOString();
+    const ops = [
+      { clientId: 'offline-visit-aaaa', type: 'visit.create', payload: { clientName: 'No-signal Village Shop', purpose: 'Order', lat: 20.31, lng: 85.83, time: t0 } },
+      { clientId: 'offline-out-bbbb', type: 'visit.checkOut', payload: { visitId: 'client:offline-visit-aaaa', lat: 20.31, lng: 85.83, time: new Date().toISOString() } },
+    ];
+    const r = await as('manager').post('/api/sync', { ops });
+    assert.deepEqual(r.body.results.map((x) => x.status), ['ok', 'ok'], JSON.stringify(r.body));
+    const list = await as('manager').get('/api/visits?limit=50');
+    const v = list.body.items.find((x) => x.clientId === 'offline-visit-aaaa');
+    assert.ok(v?.checkOut?.time, 'visit is closed on the server');
+    assert.equal(new Date(v.checkIn.time).toISOString(), t0, 'original offline time is kept');
+  });
+
+  test('system status and test push', async () => {
+    const st = await as('admin').get('/api/admin/system-status');
+    assert.equal(st.status, 200);
+    assert.equal(st.body.sms.provider, 'console');
+    assert.equal(st.body.push.enabled, false);
+    const push = await as('fe').post('/api/notifications/test', {});
+    assert.equal(push.status, 200);
+    assert.equal(push.body.stored, 1);
+    const denied = await as('fe').get('/api/admin/system-status');
+    assert.equal(denied.status, 403);
   });
 });
 

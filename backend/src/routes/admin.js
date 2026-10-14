@@ -4,7 +4,9 @@ import { ADMINS, EMPLOYEE_ROLES, PARTNER_ROLES } from '../config/roles.js';
 import { authorize } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { AuditLog, Distributor, Geofence, RefreshToken, Territory, User } from '../models/index.js';
-import { notify } from '../services/messaging.js';
+import { env } from '../config/env.js';
+import { notify, pushStatus } from '../services/messaging.js';
+import { smsConfigProblems } from '../services/otpDelivery.js';
 import { badRequest, escapeRegex, forbidden, notFound, paged } from '../utils/http.js';
 
 const r = Router();
@@ -187,6 +189,18 @@ r.post(
     res.json({ recipients: ids.length });
   },
 );
+
+/** Integration health for the admin panel: SMS OTP, push, email, database mode. */
+r.get('/system-status', async (_req, res) => {
+  const devices = await User.aggregate([{ $project: { n: { $size: { $ifNull: ['$fcmTokens', []] } } } }, { $group: { _id: null, users: { $sum: { $cond: [{ $gt: ['$n', 0] }, 1, 0] } }, devices: { $sum: '$n' } } }]);
+  res.json({
+    environment: env.nodeEnv,
+    sms: { provider: env.sms.provider, problems: smsConfigProblems(), devOtpShownOnScreen: env.otp.exposeInResponse },
+    email: { configured: Boolean(env.smtp.host) },
+    push: { ...(await pushStatus()), usersWithDevices: devices[0]?.users ?? 0, devices: devices[0]?.devices ?? 0 },
+    database: { inMemory: !env.mongoUri },
+  });
+});
 
 r.get('/audit-logs', async (req, res) => res.json(await paged(AuditLog, {}, req.query, { populate: { path: 'actor', select: 'name' } })));
 

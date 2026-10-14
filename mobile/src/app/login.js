@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import ServerSettings from '../components/ServerSettings';
 import { Button, Card, Chips, Input, Screen, T, useBusy } from '../components/ui';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -74,6 +75,7 @@ export default function Login() {
           {otpSent && <Button title="Change number / resend" variant="ghost" onPress={() => { setOtpSent(false); setCode(''); }} />}
         </Card>
         <T muted size={12} style={{ textAlign: 'center' }}>Sessions sign out automatically after a period of inactivity.</T>
+        <ServerSettings />
       </Screen>
     </KeyboardAvoidingView>
   );

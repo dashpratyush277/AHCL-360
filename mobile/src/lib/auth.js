@@ -27,7 +27,11 @@ export function AuthProvider({ children }) {
       setS(s);
       setReady(true);
     });
-    return onSessionChange(setS);
+    return onSessionChange((s) => {
+      setS(s);
+      // Session ended (logout, blocked, idle timeout, revoked): stop background GPS too.
+      if (!s) stopTracking().catch(() => {});
+    });
   }, []);
 
   const signOut = useCallback(async () => {

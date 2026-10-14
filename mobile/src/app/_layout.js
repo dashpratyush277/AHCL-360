@@ -1,4 +1,6 @@
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
+import { useEffect } from 'react';
+import { attachPushListeners } from '../lib/push';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../lib/auth';
@@ -7,6 +9,8 @@ import { useTheme } from '../theme';
 
 export default function RootLayout() {
   const t = useTheme();
+  // Tapping a push notification opens the notification list.
+  useEffect(() => attachPushListeners(() => router.push('/common/notifications')), []);
   return (
     <SafeAreaProvider>
       <AuthProvider>

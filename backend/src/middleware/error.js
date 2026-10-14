@@ -27,5 +27,7 @@ export function errorHandler(err, _req, res, _next) {
   }
 
   if (status >= 500) console.error(err);
-  res.status(status).json({ error: status >= 500 && env.isProd ? 'Internal server error' : message, details });
+  // Hide unexpected 5xx details in production; errors marked `expose` carry a user-safe message.
+  const hide = status >= 500 && env.isProd && !err.expose;
+  res.status(status).json({ error: hide ? 'Internal server error' : message, details });
 }

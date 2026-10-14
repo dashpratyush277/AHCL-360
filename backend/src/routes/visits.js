@@ -75,8 +75,13 @@ export async function createVisit(user, body) {
   });
 }
 
+/**
+ * Check out of a visit. `id` is the server id, or `client:<clientId>` for a visit that was
+ * started offline (the phone never learned its server id).
+ */
 export async function checkOutVisit(user, id, body) {
-  const visit = await Visit.findOne({ _id: id, user: user._id });
+  const byClient = String(id).startsWith('client:');
+  const visit = await Visit.findOne(byClient ? { clientId: String(id).slice(7), user: user._id } : { _id: id, user: user._id });
   if (!visit) throw notFound('Visit not found');
   if (visit.checkOut?.time) return visit;
   visit.checkOut = { time: body.time || new Date(), lat: body.lat, lng: body.lng, accuracy: body.accuracy };

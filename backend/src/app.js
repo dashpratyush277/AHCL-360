@@ -1,3 +1,5 @@
+import path from 'node:path';
+import fs from 'node:fs';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -25,7 +27,17 @@ import visitRoutes from './routes/visits.js';
 export function createApp() {
   const app = express();
   app.set('trust proxy', 1);
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          // admin panel: OpenStreetMap tiles + blob: previews of downloaded PDFs/images
+          'img-src': ["'self'", 'data:', 'blob:', 'https://*.tile.openstreetmap.org'],
+          'frame-src': ["'self'", 'blob:'],
+        },
+      },
+    }),
+  );
   app.use(cors({ origin: env.corsOrigins.includes('*') ? true : env.corsOrigins }));
   app.use(express.json({ limit: '2mb' }));
   if (env.nodeEnv !== 'test') app.use(morgan(env.isProd ? 'combined' : 'dev'));
@@ -52,6 +64,13 @@ export function createApp() {
   api.use('/', partnerRoutes); // /orders /invoices /retailers /claims
   api.use('/', commonRoutes); // /profile /notifications /support
   app.use('/api', api);
+
+  // Optional: serve the built admin panel (admin/dist) on the same domain as the API.
+  if (env.adminDir && fs.existsSync(path.join(env.adminDir, 'index.html'))) {
+    const dir = path.resolve(env.adminDir);
+    app.use(express.static(dir, { index: false, maxAge: '1h' }));
+    app.get(/^\/(?!api(\/|$)).*/, (_req, res) => res.sendFile(path.join(dir, 'index.html')));
+  }
 
   app.use(notFoundHandler);
   app.use(errorHandler);

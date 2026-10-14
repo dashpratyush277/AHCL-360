@@ -91,18 +91,26 @@ all reports, audit log.
 - **Production checklist:** set `JWT_*_SECRET`, `ENCRYPTION_KEY` (back it up – files are unreadable without it),
   `MONGO_URI`, `CORS_ORIGINS`, `OTP_EXPOSE=false`, `SMS_WEBHOOK_URL`, and serve everything over HTTPS.
 
-## Push notifications & maps (production)
-- **FCM:** `npm i firebase-admin` in `backend`, set `FIREBASE_SERVICE_ACCOUNT` to the service-account JSON path,
-  and add `google-services.json` to the mobile app. Remote push does not work in Expo Go on Android; build a
-  development build with `npx eas-cli build --profile development`. Without FCM, notifications are still stored and
-  shown in-app.
-- **Background GPS** needs a development/production build as well (Expo Go only tracks in the foreground).
-- **Google Maps on Android:** replace `REPLACE_WITH_GOOGLE_MAPS_ANDROID_KEY` in `mobile/app.json`.
+## APK, SMS OTP, push, hosting
+Everything needed to go from this repo to phones and production is in **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**:
+
+- **Android APK:** `cd mobile` → `npx eas-cli@latest build -p android --profile preview` (profiles in `mobile/eas.json`).
+  Background GPS and push need this build; Expo Go cannot do either on Android.
+- **Real SMS OTP:** `SMS_PROVIDER=fast2sms | msg91 | twilio | webhook` (+ DLT sender ID/template). Email OTP via SMTP.
+- **Push:** Firebase `google-services.json` in `mobile/` + `FIREBASE_SERVICE_ACCOUNT(_BASE64)` on the server.
+  Test from the app: More → Profile → *Send test notification*.
+- **Hosting:** root `Dockerfile` (API + admin panel on one domain), `render.yaml` (Render + MongoDB Atlas) or
+  `deploy/docker-compose.prod.yml` (own server, automatic HTTPS, backup script).
+- **First production admin:** `npm run create-admin -- --name "..." --mobile ... --password "..."`.
+- The admin **Dashboard → Integrations** card shows whether SMS, push, email and the database are live.
+- The mobile login screen has a **Server address** setting, so a test APK can be pointed at another server.
+
+Client demonstration walkthrough for all review points: **[docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)**.
 
 ## Tests
 
 ```bash
-cd backend && npm test     # 17 end-to-end API tests on an in-memory MongoDB
+cd backend && npm test     # 20 end-to-end API tests on an in-memory MongoDB
 ```
 
 ## API overview (all under `/api`, Bearer token unless noted)

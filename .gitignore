@@ -18,7 +18,13 @@ mobile/web-build/
 *.p12
 *.key
 *.mobileprovision
-google-services.json
-GoogleService-Info.plist
+# Firebase *server* keys are secret – never commit them (google-services.json in mobile/ is fine to commit)
+*service-account*.json
+*firebase-adminsdk*.json
+
 
 .DS_Store
+
+# self-hosted deployment
+deploy/.env
+deploy/backups/
