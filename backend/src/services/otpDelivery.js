@@ -146,6 +146,6 @@ export function smsConfigProblems() {
   const problems = [];
   if (need) for (const k of need) if (!env.sms[p][k]) problems.push(`SMS_PROVIDER=${p} needs ${k}`);
   if (p === 'webhook' && !env.sms.webhookUrl) problems.push('SMS_PROVIDER=webhook needs SMS_WEBHOOK_URL');
-  if (p === 'console' && env.isProd) problems.push('SMS_PROVIDER=console is not allowed in production');
+  if (p === 'console' && env.isProd && !env.demoMode) problems.push('SMS_PROVIDER=console is not allowed in production');
   return problems;
 }

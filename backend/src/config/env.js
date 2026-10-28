@@ -36,12 +36,16 @@ export const env = {
     ttlMinutes: Number(process.env.OTP_TTL_MINUTES || 5),
     maxAttempts: Number(process.env.OTP_MAX_ATTEMPTS || 5),
     // When true (dev only) the OTP is also returned in the API response for testing.
-    exposeInResponse: !isProd && process.env.OTP_EXPOSE !== 'false',
+    // DEMO_MODE=true allows this on a hosted demo server that has no SMS account yet.
+    exposeInResponse: isProd ? process.env.DEMO_MODE === 'true' : process.env.OTP_EXPOSE !== 'false',
     // Throttle: minimum seconds between OTP requests for the same number.
     resendSeconds: Number(process.env.OTP_RESEND_SECONDS || 30),
   },
 
   uploadDir: process.env.UPLOAD_DIR || 'uploads',
+  // disk | mongo – use "mongo" on hosts without a persistent disk (e.g. Render free tier)
+  uploadStorage: (process.env.UPLOAD_STORAGE || 'disk').toLowerCase(),
+  demoMode: process.env.DEMO_MODE === 'true',
   maxUploadMb: Number(process.env.MAX_UPLOAD_MB || 10),
 
   expenseRatesPerKm: {

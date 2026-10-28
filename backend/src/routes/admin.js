@@ -196,6 +196,8 @@ r.get('/system-status', async (_req, res) => {
   res.json({
     environment: env.nodeEnv,
     sms: { provider: env.sms.provider, problems: smsConfigProblems(), devOtpShownOnScreen: env.otp.exposeInResponse },
+    demoMode: env.demoMode,
+    uploadStorage: env.uploadStorage,
     email: { configured: Boolean(env.smtp.host) },
     push: { ...(await pushStatus()), usersWithDevices: devices[0]?.users ?? 0, devices: devices[0]?.devices ?? 0 },
     database: { inMemory: !env.mongoUri },

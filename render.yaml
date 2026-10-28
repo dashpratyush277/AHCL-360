@@ -1,50 +1,47 @@
-# Render Blueprint – one web service (API + admin panel) with a persistent disk for uploads.
-# Render dashboard → New → Blueprint → select this repo. Then fill in the "sync: false" values.
-# Database: create a free/paid cluster on MongoDB Atlas and paste its connection string as MONGO_URI.
+# Render Blueprint – AHCL 360 API + admin panel (one web service).
+# Render dashboard → New → Blueprint → select this GitHub repo → fill in MONGO_URI → Apply.
+#
+# FREE TIER (this file): no persistent disk, so uploaded files are stored (encrypted) in MongoDB,
+# and the service sleeps after 15 minutes without traffic (the first request then takes ~1 minute).
+# DEMO_MODE shows login OTPs on screen because no SMS provider is configured yet.
+#
+# To upgrade for real use: plan: starter, add the disk below, set UPLOAD_STORAGE=disk,
+# set DEMO_MODE=false and SEED_DEMO=false, and configure SMS + Firebase (docs/DEPLOYMENT.md).
+#   disk:
+#     name: uploads
+#     mountPath: /data
+#     sizeGB: 5
 services:
   - type: web
     name: ahcl360
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: starter # persistent disks need a paid plan
+    plan: free
     region: singapore
     healthCheckPath: /api/health
-    disk:
-      name: uploads
-      mountPath: /data
-      sizeGB: 5
     envVars:
       - key: NODE_ENV
         value: production
+      # MongoDB Atlas connection string, e.g. mongodb+srv://user:pass@cluster0.xxxx.mongodb.net/ahcl360
       - key: MONGO_URI
         sync: false
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
-      # 64 hex characters – generate once, store safely, NEVER change (encrypted data depends on it)
+      # Generated once by Render. NEVER change it later – encrypted data depends on it.
       - key: ENCRYPTION_KEY
-        sync: false
-      - key: OTP_EXPOSE
-        value: "false"
+        generateValue: true
+      - key: UPLOAD_STORAGE
+        value: mongo
+      - key: DEMO_MODE
+        value: "true"
       - key: SMS_PROVIDER
-        sync: false
-      - key: FAST2SMS_API_KEY
-        sync: false
-      - key: FAST2SMS_SENDER_ID
-        sync: false
-      - key: FAST2SMS_DLT_MESSAGE_ID
-        sync: false
-      - key: FIREBASE_SERVICE_ACCOUNT_BASE64
-        sync: false
+        value: console
+      # Loads the demo accounts the first time (only into an empty database).
+      - key: SEED_DEMO
+        value: "true"
       - key: COMPANY_NAME
         value: AHCL
-      - key: COMPANY_GSTIN
-        sync: false
-      - key: COMPANY_ADDRESS
-        sync: false
       - key: COMPANY_STATE_CODE
         value: "21"
-      # set to "true" only on a demo server to load the demo accounts into an empty database
-      - key: SEED_DEMO
-        value: "false"

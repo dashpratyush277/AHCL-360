@@ -22,3 +22,7 @@ const fileSchema = new Schema(
 );
 
 export const File = mongoose.model('File', fileSchema);
+
+/** Encrypted file bytes when UPLOAD_STORAGE=mongo (hosts without a persistent disk). Max 16 MB per document. */
+const fileBlobSchema = new Schema({ _id: String, data: { type: Buffer, required: true } }, { versionKey: false });
+export const FileBlob = mongoose.model('FileBlob', fileBlobSchema);

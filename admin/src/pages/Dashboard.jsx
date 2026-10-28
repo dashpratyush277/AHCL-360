@@ -64,7 +64,8 @@ function Integrations() {
     <Card title="Integrations" className="integrations">
       <table className="table">
         <tbody>
-          {row('SMS OTP', s.sms.provider !== 'console' && !s.sms.problems.length, s.sms.problems.length ? s.sms.problems.join('; ') : `Provider: ${s.sms.provider}${s.sms.devOtpShownOnScreen ? ' · dev OTP shown on screen' : ''}`)}
+          {row('SMS OTP', s.sms.provider !== 'console' && !s.sms.problems.length, s.sms.problems.length ? s.sms.problems.join('; ') : s.sms.provider === 'console' ? 'Demo mode – OTP is shown on the login screen instead of by SMS' : `Provider: ${s.sms.provider}${s.sms.devOtpShownOnScreen ? ' · OTP also shown on screen (demo mode)' : ''}`)}
+          {row('File storage', true, s.uploadStorage === 'mongo' ? 'Encrypted, stored in the database' : 'Encrypted, stored on the server disk')}
           {row('Push notifications (FCM)', s.push.enabled, s.push.enabled ? `${s.push.devices} device(s) registered by ${s.push.usersWithDevices} user(s)` : s.push.error || 'Set FIREBASE_SERVICE_ACCOUNT on the server')}
           {row('Email OTP', s.email.configured, s.email.configured ? 'SMTP configured' : 'Optional – set SMTP_HOST')}
           {row('Database', !s.database.inMemory, s.database.inMemory ? 'Temporary in-memory database – data resets on restart' : 'Persistent MongoDB')}

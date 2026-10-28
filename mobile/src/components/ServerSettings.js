@@ -34,6 +34,7 @@ export default function ServerSettings() {
   return (
     <Card title="Server address">
       <Input value={url} onChangeText={(v) => { setUrl(v); setStatus(null); }} autoCapitalize="none" autoCorrect={false} keyboardType="url" placeholder="http://192.168.1.10:4000/api" />
+      {status === 'checking' && <T size={12}>Connecting… a sleeping free-tier server can take up to a minute to wake up.</T>}
       {status === 'ok' && <T size={12}>✓ Server reachable</T>}
       {status === 'fail' && <T size={12}>✗ Cannot reach this server</T>}
       <Row>

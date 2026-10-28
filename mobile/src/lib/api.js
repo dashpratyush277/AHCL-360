@@ -41,10 +41,10 @@ export async function setApiUrl(url) {
   return apiUrl;
 }
 
-/** Ping /health on a candidate URL; resolves true/false within ~6 s. */
-export async function testApiUrl(url) {
+/** Ping /health on a candidate URL. Free hosting may need ~1 min to wake up, hence the long default. */
+export async function testApiUrl(url, timeoutMs = 75000) {
   const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 6000);
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(`${url.trim().replace(/\/+$/, '')}/health`, { signal: ctrl.signal });
     return res.ok;

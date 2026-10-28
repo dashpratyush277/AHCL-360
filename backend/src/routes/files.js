@@ -1,12 +1,10 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import crypto from 'node:crypto';
 import { Router } from 'express';
 import multer from 'multer';
 import { env } from '../config/env.js';
 import { isAdmin } from '../config/roles.js';
 import { Distributor, File, User } from '../models/index.js';
-import { decryptBuffer, encryptBuffer } from '../utils/crypto.js';
+import { getFile, putFile, removeFile } from '../services/fileStore.js';
 import { badRequest, forbidden, notFound } from '../utils/http.js';
 
 const r = Router();
@@ -17,15 +15,12 @@ const upload = multer({
   fileFilter: (_req, f, cb) => cb(ALLOWED.includes(f.mimetype) ? null : badRequest(`Unsupported file type: ${f.mimetype}`), ALLOWED.includes(f.mimetype)),
 });
 
-const dir = path.resolve(env.uploadDir);
-await fs.mkdir(dir, { recursive: true });
-
 /** Save uploaded files encrypted at rest; returns File docs. */
 export async function storeFiles(user, files, purpose = 'other') {
   return Promise.all(
     files.map(async (f) => {
       const storageName = `${crypto.randomUUID()}.bin`;
-      await fs.writeFile(path.join(dir, storageName), encryptBuffer(f.buffer));
+      await putFile(storageName, f.buffer);
       return File.create({ owner: user._id, distributor: user.distributor, storageName, originalName: f.originalname, mimeType: f.mimetype, size: f.size, purpose });
     }),
   );
@@ -55,7 +50,7 @@ r.get('/:id', async (req, res) => {
   const file = await File.findById(req.params.id);
   if (!file) throw notFound('File not found');
   if (!(await canRead(req.user, file))) throw forbidden();
-  const data = decryptBuffer(await fs.readFile(path.join(dir, file.storageName)));
+  const data = await getFile(file.storageName);
   res.setHeader('Content-Type', file.mimeType);
   res.setHeader('Content-Disposition', `${req.query.download ? 'attachment' : 'inline'}; filename="${encodeURIComponent(file.originalName || 'file')}"`);
   res.setHeader('Cache-Control', 'private, max-age=300');
@@ -66,7 +61,7 @@ r.delete('/:id', async (req, res) => {
   const file = await File.findById(req.params.id);
   if (!file) throw notFound('File not found');
   if (String(file.owner) !== String(req.user._id) && !isAdmin(req.user)) throw forbidden();
-  await fs.rm(path.join(dir, file.storageName), { force: true });
+  await removeFile(file.storageName);
   await file.deleteOne();
   res.json({ ok: true });
 });
