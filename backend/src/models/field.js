@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
-const point = { lat: Number, lng: Number, accuracy: Number };
+const point = { lat: Number, lng: Number, accuracy: Number, mocked: Boolean };
 
 const territorySchema = new Schema(
   {
@@ -38,9 +38,11 @@ const locationPingSchema = new Schema({
   accuracy: Number,
   speed: Number,
   battery: Number,
+  // Android reports when a mock-location (fake GPS) app supplied the fix
+  mocked: Boolean,
   recordedAt: { type: Date, required: true },
-  // Keep raw GPS for 180 days.
-  createdAt: { type: Date, default: Date.now, expires: 60 * 60 * 24 * 180 },
+  // Raw GPS retention (privacy policy): LOCATION_RETENTION_DAYS, default 180.
+  createdAt: { type: Date, default: Date.now, expires: 60 * 60 * 24 * Number(process.env.LOCATION_RETENTION_DAYS || 180) },
 });
 locationPingSchema.index({ user: 1, recordedAt: -1 });
 export const LocationPing = mongoose.model('LocationPing', locationPingSchema);

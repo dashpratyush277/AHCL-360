@@ -107,11 +107,32 @@ Everything needed to go from this repo to phones and production is in **[docs/DE
 
 Client demonstration walkthrough for all review points: **[docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)**.
 
+## Documentation
+
+| Document | For |
+|---|---|
+| [docs/REVIEW_RESPONSE.md](docs/REVIEW_RESPONSE.md) | Point-by-point response to AHCL's first-cut technical review (31 Oct 2026) |
+| [docs/TEST_REPORT.md](docs/TEST_REPORT.md) | Automated test results and coverage (`npm run test:report`) |
+| [docs/api/API.md](docs/api/API.md) · [Postman collection](docs/api/AHCL360.postman_collection.json) | API reference (`npm run api-docs`) |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Deployment diagram, environment variables, monitoring, rollback, backup/restore, costs |
+| [docs/PRIVACY_AND_SECURITY.md](docs/PRIVACY_AND_SECURITY.md) | Location policy draft, retention, security checklist |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | APK, Firebase, SMS, hosting, Play Store, handover |
+| [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | Recorded demonstration walkthrough |
+
+Branding: the AHCL logo source and the approved design reference are in `branding/`; `python branding/make_assets.py`
+regenerates app icons, splash screen, admin logos and the PDF logo.
+
 ## Tests
 
 ```bash
-cd backend && npm test     # 20 end-to-end API tests on an in-memory MongoDB
+cd backend
+npm test                 # 41 end-to-end API tests on an in-memory MongoDB (incl. review cases T01–T11)
+npm run test:report      # same, with coverage -> docs/TEST_REPORT.md
+npm run backup           # database backup (see docs/OPERATIONS.md)
 ```
+
+Every push to `main` runs the CI pipeline in `.github/workflows/ci.yml` (API tests, admin lint/build, mobile
+lint/bundle with the same npm version as EAS, Docker build).
 
 ## API overview (all under `/api`, Bearer token unless noted)
 `auth/*` (public: otp/request, otp/verify, login, refresh) · `attendance/*` · `tracking/*` · `visits` · `hr/*`

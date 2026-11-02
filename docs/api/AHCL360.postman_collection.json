@@ -1,0 +1,2908 @@
+{
+  "info": {
+    "name": "AHCL 360 API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Set baseUrl (e.g. https://ahcl360.onrender.com/api) and token (accessToken from a login call)."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://ahcl360.onrender.com/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication (public except where noted)",
+      "item": [
+        {
+          "name": "POST /auth/otp/request",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/request",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "otp",
+                "request"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /auth/otp/verify",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/otp/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /auth/mfa/verify",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/mfa/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mfa",
+                "verify"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /auth/password/reset",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/password/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password",
+                "reset"
+              ]
+            },
+            "description": "Forgotten password: prove possession of the registered mobile/email with an OTP, then set a new one.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /auth/refresh",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /auth/logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /auth/logout-all",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout-all"
+              ]
+            },
+            "description": "Sign out every other device; this device gets fresh tokens.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /auth/me",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /auth/change-password",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /auth/fcm-token",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/fcm-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "fcm-token"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Encrypted file upload / download",
+      "item": [
+        {
+          "name": "POST /files",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/files",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "files"
+              ]
+            },
+            "description": "POST /api/files (multipart, field \"files\", optional \"purpose\")",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /files/:id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/files/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "files",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "DELETE /files/:id",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/files/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "files",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance (employees)",
+      "item": [
+        {
+          "name": "POST /attendance/check-in",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/check-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "check-in"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /attendance/check-out",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/check-out",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "check-out"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /attendance/today",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/today",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "today"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /attendance/month",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/month",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "month"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /attendance/report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/report",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "report"
+              ]
+            },
+            "description": "Monthly attendance report download. ?month=YYYY-MM&format=pdf|xlsx&user="
+          }
+        },
+        {
+          "name": "GET /attendance/team",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/attendance/team",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "attendance",
+                "team"
+              ]
+            },
+            "description": "Team attendance for a given day (managers/admins)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "GPS tracking (employees)",
+      "item": [
+        {
+          "name": "GET /tracking/config",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tracking/config",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tracking",
+                "config"
+              ]
+            },
+            "description": "App polls this to auto start/stop background tracking with office hours."
+          }
+        },
+        {
+          "name": "POST /tracking/pings",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/tracking/pings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tracking",
+                "pings"
+              ]
+            },
+            "description": "Batch upload of GPS points (background task / offline buffer).",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /tracking/route",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tracking/route",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tracking",
+                "route"
+              ]
+            },
+            "description": "Route map history: ?user=&date=YYYY-MM-DD"
+          }
+        },
+        {
+          "name": "GET /tracking/live",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tracking/live",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tracking",
+                "live"
+              ]
+            },
+            "description": "Live location of team members (last ping in the past 30 min)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Client visits (employees)",
+      "item": [
+        {
+          "name": "POST /visits",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/visits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /visits/:id/check-out",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{id}}/check-out",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{id}}",
+                "check-out"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /visits",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/visits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /visits/:id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "HR: leave, holidays, payslips, documents, KYC",
+      "item": [
+        {
+          "name": "GET /hr/holidays",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/hr/holidays",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "holidays"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /hr/holidays",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/hr/holidays",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "holidays"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /hr/holidays/:id",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/hr/holidays/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "holidays",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /hr/leaves",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/hr/leaves",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "leaves"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /hr/leaves",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/hr/leaves",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "leaves"
+              ]
+            },
+            "description": "?scope=mine (default) | team ; ?status="
+          }
+        },
+        {
+          "name": "GET /hr/leaves/balance",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/hr/leaves/balance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "leaves",
+                "balance"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /hr/leaves/:id/cancel",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/hr/leaves/{{id}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "leaves",
+                "{{id}}",
+                "cancel"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /hr/leaves/:id/review",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/hr/leaves/{{id}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "leaves",
+                "{{id}}",
+                "review"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /hr/payslips",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/hr/payslips",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "payslips"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /hr/payslips/:month/pdf",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/hr/payslips/{{month}}/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "payslips",
+                "{{month}}",
+                "pdf"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /hr/salary-summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/hr/salary-summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "salary-summary"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /hr/payslips",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/hr/payslips",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "payslips"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /hr/documents",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/hr/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "documents"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /hr/documents",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/hr/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "documents"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /hr/documents/:id/verify",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/hr/documents/{{id}}/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "documents",
+                "{{id}}",
+                "verify"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /hr/kyc",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/hr/kyc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "kyc"
+              ]
+            },
+            "description": "KYC submission: identity numbers are encrypted at rest; files go to the vault.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /hr/kyc/:userId/review",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/hr/kyc/{{userId}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "hr",
+                "kyc",
+                "{{userId}}",
+                "review"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expense claims",
+      "item": [
+        {
+          "name": "GET /expenses/estimate",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/expenses/estimate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "expenses",
+                "estimate"
+              ]
+            },
+            "description": "Preview auto-calculated travel amount: ?date=YYYY-MM-DD&mode=bike"
+          }
+        },
+        {
+          "name": "POST /expenses",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "expenses"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /expenses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/expenses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "expenses"
+              ]
+            },
+            "description": "?scope=mine|team&status=&from=&to="
+          }
+        },
+        {
+          "name": "PATCH /expenses/:id",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/expenses/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "expenses",
+                "{{id}}"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /expenses/:id",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/expenses/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "expenses",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /expenses/:id/review",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/expenses/{{id}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "expenses",
+                "{{id}}",
+                "review"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /expenses/:id/reimburse",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/expenses/{{id}}/reimburse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "expenses",
+                "{{id}}",
+                "reimburse"
+              ]
+            },
+            "description": "Finance marks approved claims as reimbursed.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Team management (managers)",
+      "item": [
+        {
+          "name": "GET /team/juniors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/team/juniors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "team",
+                "juniors"
+              ]
+            },
+            "description": "Direct + indirect juniors with today's status."
+          }
+        },
+        {
+          "name": "POST /team/work-reports",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/team/work-reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "team",
+                "work-reports"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /team/work-reports",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/team/work-reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "team",
+                "work-reports"
+              ]
+            },
+            "description": "?scope=mine|team&status=&date="
+          }
+        },
+        {
+          "name": "POST /team/work-reports/:id/review",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/team/work-reports/{{id}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "team",
+                "work-reports",
+                "{{id}}",
+                "review"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /team/performance",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/team/performance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "team",
+                "performance"
+              ]
+            },
+            "description": "Per junior for a period: attendance %, visits, distance, sales vs target, report approval, expenses and a weighted score (0-100)."
+          }
+        },
+        {
+          "name": "POST /team/juniors/:id/assign",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/team/juniors/{{id}}/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "team",
+                "juniors",
+                "{{id}}",
+                "assign"
+              ]
+            },
+            "description": "Reassign a junior to a manager (admin or the current manager).",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "PDF / Excel reports",
+      "item": [
+        {
+          "name": "GET /reports/:type",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{type}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "{{type}}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Offline sync",
+      "item": [
+        {
+          "name": "POST /sync",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/sync",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "sync"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboards",
+      "item": [
+        {
+          "name": "GET /analytics/dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "dashboard"
+              ]
+            },
+            "description": "Home dashboard numbers, tailored to the caller's panel and role."
+          }
+        },
+        {
+          "name": "GET /analytics/charts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/analytics/charts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "analytics",
+                "charts"
+              ]
+            },
+            "description": "Chart series: sales/visits/order value by month, orders by status, top distributors, stock."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Administration (admins only)",
+      "item": [
+        {
+          "name": "GET /admin/users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /admin/users/:id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /admin/users",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /admin/users/:id",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{id}}"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /admin/users/:id/block",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{id}}/block",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{id}}",
+                "block"
+              ]
+            },
+            "description": "Block / reactivate. Blocking revokes all sessions immediately.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /admin/users/:id/force-logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{id}}/force-logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{id}}",
+                "force-logout"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /admin/territories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/territories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "territories"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /admin/territories",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/admin/territories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "territories"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /admin/territories/:id",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/admin/territories/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "territories",
+                "{{id}}"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /admin/territories/:id",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/admin/territories/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "territories",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /admin/geofences",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/geofences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "geofences"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /admin/geofences",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/admin/geofences",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "geofences"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /admin/geofences/:id",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/admin/geofences/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "geofences",
+                "{{id}}"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /admin/geofences/:id",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/admin/geofences/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "geofences",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /admin/broadcast",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/admin/broadcast",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "broadcast"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /admin/system-status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/system-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "system-status"
+              ]
+            },
+            "description": "Integration health for the admin panel: SMS OTP, push, email, database mode."
+          }
+        },
+        {
+          "name": "GET /admin/audit-logs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/audit-logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "audit-logs"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products, distributors, stock, DSO, targets",
+      "item": [
+        {
+          "name": "GET /products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /products",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /products/:id",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/products/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{id}}"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /distributors",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/distributors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "distributors"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /distributors/:id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/distributors/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "distributors",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /distributors",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/distributors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "distributors"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "PATCH /distributors/:id",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/distributors/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "distributors",
+                "{{id}}"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /stock",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stock"
+              ]
+            },
+            "description": "Distributor-wise stock statement: opening / in / out / return / adjustment / closing."
+          }
+        },
+        {
+          "name": "POST /stock/txns",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/stock/txns",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stock",
+                "txns"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /stock/txns",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/stock/txns",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stock",
+                "txns"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /stock/reorder-suggestions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/stock/reorder-suggestions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stock",
+                "reorder-suggestions"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "PUT /stock/reorder-levels",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/stock/reorder-levels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stock",
+                "reorder-levels"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /dso",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/dso",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dso"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /dso",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dso",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dso"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /targets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/targets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "targets"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "PUT /targets",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/targets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "targets"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders, invoices, credit notes, retailers, claims",
+      "item": [
+        {
+          "name": "POST /orders/quote",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/orders/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "quote"
+              ]
+            },
+            "description": "Price preview (cart summary) without placing the order.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /orders",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /orders/:id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /orders/:id/status",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{id}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{id}}",
+                "status"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /orders/:id/returns",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{id}}/returns",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{id}}",
+                "returns"
+              ]
+            },
+            "description": "Goods returned after delivery (damaged, expired, wrong item...). Creates a GST credit note, takes the goods out of the distributor's stock and records the return on the order.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /credit-notes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/credit-notes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "credit-notes"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /credit-notes/:id/pdf",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/credit-notes/{{id}}/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "credit-notes",
+                "{{id}}",
+                "pdf"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /invoices",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /invoices/:id/pdf",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{id}}/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                "{{id}}",
+                "pdf"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /retailers",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/retailers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "retailers"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /retailers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/retailers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "retailers"
+              ]
+            },
+            "description": "?q=&city=&distributor=&kycStatus=&sort=name|-createdAt"
+          }
+        },
+        {
+          "name": "GET /retailers/:id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/retailers/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "retailers",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "PATCH /retailers/:id",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/retailers/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "retailers",
+                "{{id}}"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /retailers/:id/kyc-review",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/retailers/{{id}}/kyc-review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "retailers",
+                "{{id}}",
+                "kyc-review"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /claims",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "claims"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /claims",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/claims",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "claims"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /claims/:id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/claims/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "claims",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "PATCH /claims/:id",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/claims/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "claims",
+                "{{id}}"
+              ]
+            },
+            "description": "Partner re-submits after \"revision_requested\".",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /claims/:id/review",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/claims/{{id}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "claims",
+                "{{id}}",
+                "review"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile, notifications, support",
+      "item": [
+        {
+          "name": "PATCH /profile",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{baseUrl}}/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /notifications/read",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "read"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /notifications/test",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/notifications/test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "test"
+              ]
+            },
+            "description": "Sends a push to the caller's own devices – used to verify FCM on a real phone.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /support/contact",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/support/contact",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "support",
+                "contact"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /support/tickets",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/support/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "support",
+                "tickets"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /support/tickets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/support/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "support",
+                "tickets"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "GET /support/tickets/:id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/support/tickets/{{id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "support",
+                "tickets",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "POST /support/tickets/:id/messages",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/support/tickets/{{id}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "support",
+                "tickets",
+                "{{id}}",
+                "messages"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /support/tickets/:id/status",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/support/tickets/{{id}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "support",
+                "tickets",
+                "{{id}}",
+                "status"
+              ]
+            },
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

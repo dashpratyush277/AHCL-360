@@ -87,6 +87,8 @@ const syncOpSchema = new Schema(
     user: { ...ref('User'), required: true },
     clientId: { type: String, required: true },
     op: String,
+    state: { type: String, enum: ['processing', 'applied', 'failed'], default: 'applied' },
+    error: String,
     result: Schema.Types.Mixed,
   },
   { timestamps: true },

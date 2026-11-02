@@ -1,10 +1,15 @@
+import Constants from 'expo-constants';
+import * as Device from 'expo-device';
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { Button, Card, Input, KV, Screen, T, useBusy } from '../../components/ui';
 import { api, getSession, setSession } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { pushAvailable, registerForPush } from '../../lib/push';
 import { date, label } from '../../lib/format';
+
+// Release (Play Store) builds hide test-only tools such as the push test button.
+const isRelease = Constants.expoConfig?.extra?.variant === 'production';
 
 export default function Profile() {
   const { user, refreshUser } = useAuth();
@@ -52,7 +57,36 @@ export default function Profile() {
         <Input label="Address" value={address} onChangeText={setAddress} multiline />
         <Button title="Save profile" loading={busy} onPress={saveProfile} />
       </Card>
-      <Card title="Push notifications">
+      <Card title="Security & sessions">
+        <KV k="Auto sign-out" v={`After ${getSession()?.idleTimeoutMinutes || 30} min of inactivity`} />
+        <KV k="This device" v={`${Device.manufacturer || ''} ${Device.modelName || ''}`.trim() || Platform.OS} />
+        <KV k="App version" v={`${Constants.expoConfig?.version || '1.0.0'} (${Constants.expoConfig?.extra?.variant || 'development'})`} />
+        <T muted size={12}>Lost a phone or shared your password? Sign out everywhere else – other devices must sign in again.</T>
+        <Button
+          title="Sign out of all other devices"
+          variant="ghost"
+          icon="log-out-outline"
+          loading={busy}
+          onPress={() =>
+            Alert.alert('Sign out other devices?', 'You stay signed in on this phone.', [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Sign out others',
+                style: 'destructive',
+                onPress: () =>
+                  run(async () => {
+                    const r = await api.post('/auth/logout-all', {});
+                    await setSession({ ...getSession(), accessToken: r.accessToken, refreshToken: r.refreshToken });
+                    await registerForPush(); // re-register this phone for notifications
+                    Alert.alert('Done', 'All other devices have been signed out.');
+                  }),
+              },
+            ])
+          }
+        />
+      </Card>
+      {!isRelease && (
+      <Card title="Push notifications (test build only)">
         <T muted size={12}>
           {pushAvailable()
             ? 'Sends a test notification to this phone through Firebase Cloud Messaging.'
@@ -81,6 +115,7 @@ export default function Profile() {
           }
         />
       </Card>
+      )}
       <Card title="Change password">
         <T muted size={12}>If you only use OTP login, leave the current password empty to set one.</T>
         <Input label="Current password" value={current} onChangeText={setCurrent} secureTextEntry />

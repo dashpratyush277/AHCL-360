@@ -1,0 +1,53 @@
+# Continuous integration: every push and pull request must pass before merging to main.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: API – tests & coverage
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: backend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: backend/package-lock.json }
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=critical
+      - run: node --test --experimental-test-coverage --test-reporter=spec --test-reporter-destination=stdout test/*.test.js
+
+  admin:
+    name: Admin panel – lint & build
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: admin } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: admin/package-lock.json }
+      - run: npm ci
+      - run: npx oxlint src
+      - run: npm run build
+
+  mobile:
+    name: Mobile app – lockfile, lint & bundle
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: mobile } }
+    steps:
+      - uses: actions/checkout@v4
+      # Node 22 ships npm 10 – the same npm EAS Build uses, so a lockfile EAS would reject fails here first.
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: mobile/package-lock.json }
+      - run: npm ci --include=dev
+      - run: npx expo lint
+      - run: npx expo-doctor
+      - run: APP_VARIANT=preview npx expo export --platform android --output-dir /tmp/expo-out
+
+  docker:
+    name: Production image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t ahcl360:ci .

@@ -1,6 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
+import BrandHeader from '../../../components/BrandHeader';
 import SyncBanner from '../../../components/SyncBanner';
 import { Badge, Button, Card, KV, ListItem, Row, Screen, Section, Stat, StatRow, T, useBusy } from '../../../components/ui';
 import { api } from '../../../lib/api';
@@ -45,10 +46,11 @@ export default function Home() {
 
   return (
     <Screen onRefresh={refresh} refreshing={today.loading}>
-      <Row style={{ justifyContent: 'space-between' }}>
-        <T size={20} weight="800">Hi, {user?.name?.split(' ')[0]}</T>
-        <Button small variant="ghost" icon="notifications-outline" title={notes.data?.unread ? String(notes.data.unread) : undefined} onPress={() => router.push('/common/notifications')} />
-      </Row>
+      <BrandHeader
+        title={`Hi, ${user?.name?.split(' ')[0] || ''}`}
+        subtitle={new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' })}
+        unread={notes.data?.unread}
+      />
       <SyncBanner />
 
       <Card title="Attendance" right={<Badge status={att?.checkOut ? 'approved' : checkedIn ? 'present' : 'pending'} text={att?.checkOut ? 'Day complete' : checkedIn ? 'Checked in' : 'Not checked in'} />}>
@@ -56,7 +58,10 @@ export default function Home() {
         <KV k="Check-in" v={time(att?.checkIn?.time)} />
         <KV k="Check-out" v={time(att?.checkOut?.time)} />
         {att?.checkIn && att.checkIn.withinGeofence === false && <T size={12} muted>Check-in was outside the office geofence.</T>}
-        <KV k="GPS tracking" v={tracking.running ? 'Active' : tracking.reason || 'Off'} />
+        <Row style={{ justifyContent: 'space-between' }}>
+          <T muted>GPS tracking</T>
+          <Badge status={tracking.running ? 'present' : 'closed'} text={tracking.running ? '● Live' : tracking.reason || 'Off'} />
+        </Row>
         {!att?.checkIn && <Button title="Check in" icon="log-in-outline" onPress={() => punch('in')} loading={busy} />}
         {checkedIn && <Button title="Check out" variant="danger" icon="log-out-outline" onPress={() => punch('out')} loading={busy} />}
       </Card>

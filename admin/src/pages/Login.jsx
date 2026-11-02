@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import { Button, Card, Field, Tabs } from '../components/ui.jsx';
+import logo from '../assets/logo.png';
+import { Button, Card, Field } from '../components/ui.jsx';
 import { api, setSession } from '../lib/api';
 
+/**
+ * Admin sign-in: password, then (when the server requires it) a one-time code sent to the
+ * admin's registered mobile – two-factor authentication for the control panel.
+ */
 export default function Login() {
-  const [mode, setMode] = useState('password');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [devCode, setDevCode] = useState('');
+  const [mfa, setMfa] = useState(null); // { mfaToken, devCode }
+  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -27,42 +30,54 @@ export default function Login() {
   const submit = (e) => {
     e.preventDefault();
     go(async () => {
-      if (mode === 'password') {
-        setSession(await api.post('/auth/login', { identifier, password, panel: 'admin' }));
-      } else if (!otpSent) {
-        const r = await api.post('/auth/otp/request', { identifier, panel: 'admin' });
-        setOtpSent(true);
-        setDevCode(r.devCode || '');
+      if (!mfa) {
+        const r = await api.post('/auth/login', { identifier, password, panel: 'admin' });
+        if (r.mfaRequired) setMfa({ mfaToken: r.mfaToken, devCode: r.devCode });
+        else setSession(r);
       } else {
-        setSession(await api.post('/auth/otp/verify', { identifier, code: otp, panel: 'admin' }));
+        setSession(await api.post('/auth/mfa/verify', { mfaToken: mfa.mfaToken, code }));
       }
     });
   };
 
   return (
     <div className="login">
-      <Card>
-        <h1>AHCL 360° Admin</h1>
-        <p className="muted" style={{ marginTop: 0 }}>Sign in with your admin or manager account.</p>
-        <Tabs tabs={[['password', 'Password'], ['otp', 'OTP']]} value={mode} onChange={(m) => { setMode(m); setOtpSent(false); setError(''); }} />
-        <form className="stack" onSubmit={submit}>
-          <Field label="Mobile or email">
-            <input value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" required autoFocus />
-          </Field>
-          {mode === 'password' && (
-            <Field label="Password">
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
-            </Field>
-          )}
-          {mode === 'otp' && otpSent && (
-            <Field label="6-digit OTP" hint={devCode ? `Dev mode OTP: ${devCode}` : 'Sent to your mobile/email'}>
-              <input inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} required />
-            </Field>
-          )}
-          {error && <div className="error-box">{error}</div>}
-          <Button disabled={busy}>{busy ? 'Please wait…' : mode === 'otp' && !otpSent ? 'Send OTP' : 'Sign in'}</Button>
-        </form>
-      </Card>
+      <div className="login-panel">
+        <div className="login-hero">
+          <img src={logo} alt="AHCL – ADC Hindustan Corporation Limited" className="login-logo" />
+          <div className="login-band">
+            <div className="kicker">WELCOME TO</div>
+            <div className="title">AHCL <span>360°</span></div>
+            <div className="tag">SUPER ADMIN · CONTROL PANEL</div>
+          </div>
+        </div>
+        <Card>
+          <form className="stack" onSubmit={submit}>
+            {!mfa ? (
+              <>
+                <Field label="Mobile or email">
+                  <input value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" required autoFocus />
+                </Field>
+                <Field label="Password">
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+                </Field>
+              </>
+            ) : (
+              <Field label="Verification code" hint={mfa.devCode ? `Demo mode – code: ${mfa.devCode}` : 'We sent a 6-digit code to your registered mobile.'}>
+                <input inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} required autoFocus />
+              </Field>
+            )}
+            {error && <div className="error-box" role="alert">{error}</div>}
+            <Button disabled={busy || (mfa && code.length !== 6)}>{busy ? 'Please wait…' : mfa ? 'Verify & sign in' : 'Sign in'}</Button>
+            {mfa && (
+              <Button type="button" variant="ghost" onClick={() => { setMfa(null); setCode(''); }}>
+                Start again
+              </Button>
+            )}
+          </form>
+        </Card>
+        <p className="muted login-foot">ADC Hindustan Corporation Limited · Confidential · Sessions end after inactivity</p>
+      </div>
     </div>
   );
 }

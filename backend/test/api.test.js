@@ -265,7 +265,7 @@ describe('partner panel', () => {
   test('partner cannot see another distributor', async () => {
     const other = await Distributor.findOne({ code: 'ST-OD-201' });
     const res = await as('partner').get(`/api/stock?distributor=${other._id}`);
-    assert.equal(res.status, 403);
+    assert.equal(res.status, 404, 'other distributors look exactly like missing ones');
   });
 
   test('dashboards', async () => {

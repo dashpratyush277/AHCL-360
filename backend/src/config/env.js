@@ -23,6 +23,13 @@ export const env = {
     refreshTtlDays: Number(process.env.JWT_REFRESH_TTL_DAYS || 30),
   },
 
+  auth: {
+    // Admin panel requires password + OTP (MFA). On by default in production.
+    adminMfa: process.env.ADMIN_MFA ? process.env.ADMIN_MFA === 'true' : isProd,
+    maxFailedLogins: Number(process.env.MAX_FAILED_LOGINS || 5),
+    lockMinutes: Number(process.env.LOCK_MINUTES || 15),
+  },
+
   // Refresh tokens unused for longer than this are rejected => auto logout after inactivity.
   idleTimeoutMinutes: Number(process.env.IDLE_TIMEOUT_MINUTES || 30),
 

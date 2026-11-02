@@ -24,6 +24,8 @@ const expenseSchema = new Schema(
     reviewComment: String,
     reimbursedAt: Date,
     reimbursementRef: String,
+    // Immutable status trail: who changed what, when (audit requirement T07)
+    history: [{ status: String, by: { type: Schema.Types.ObjectId, ref: 'User' }, note: String, at: { type: Date, default: Date.now } }],
     clientId: String,
   },
   { timestamps: true },

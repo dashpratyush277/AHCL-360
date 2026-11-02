@@ -25,6 +25,7 @@ export const visitSchema = z.object({
   lat: z.number(),
   lng: z.number(),
   accuracy: z.number().optional(),
+  mocked: z.boolean().optional(),
   time: z.coerce.date().optional(),
   clientId: z.string().optional(),
 });
@@ -44,13 +45,13 @@ export async function createVisit(user, body) {
   const open = await Visit.findOne({ user: user._id, date, 'checkOut.time': null });
   if (open) throw badRequest(`Check out of "${open.clientName}" before starting a new visit`);
 
-  let locationValid = true;
-  let locationRemark;
+  let locationValid = !body.mocked;
+  let locationRemark = body.mocked ? 'Phone reported a mock (fake) GPS location' : undefined;
   const client = body.retailer ? await Retailer.findById(body.retailer) : body.distributor ? await Distributor.findById(body.distributor) : null;
   if (client?.location?.lat != null) {
     const meters = Math.round(haversineKm(body, client.location) * 1000);
-    locationValid = meters <= VISIT_RADIUS_M;
-    if (!locationValid) locationRemark = `Checked in ${meters} m away from client's registered location`;
+    if (meters > VISIT_RADIUS_M) locationValid = false;
+    if (meters > VISIT_RADIUS_M) locationRemark = `Checked in ${meters} m away from client's registered location`;
   }
 
   const prev = await Visit.findOne({ user: user._id, date }).sort({ 'checkIn.time': -1 });
@@ -67,7 +68,7 @@ export async function createVisit(user, body) {
     retailer: body.retailer,
     purpose: body.purpose,
     notes: body.notes,
-    checkIn: { time, lat: body.lat, lng: body.lng, accuracy: body.accuracy },
+    checkIn: { time, lat: body.lat, lng: body.lng, accuracy: body.accuracy, mocked: body.mocked || undefined },
     distanceKm,
     locationValid,
     locationRemark,

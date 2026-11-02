@@ -17,13 +17,14 @@ const punchSchema = z.object({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   accuracy: z.number().optional(),
+  mocked: z.boolean().optional(),
   time: z.coerce.date().optional(), // offline punches carry their original time
 });
 
 async function buildPunch(user, body) {
   const fence = await checkGeofence(user, body);
   if (fence.enforce && !fence.within) throw forbidden('You are outside the allowed location for attendance');
-  return { time: body.time || new Date(), lat: body.lat, lng: body.lng, accuracy: body.accuracy, withinGeofence: fence.within, geofence: fence.geofence };
+  return { time: body.time || new Date(), lat: body.lat, lng: body.lng, accuracy: body.accuracy, mocked: body.mocked || undefined, withinGeofence: fence.within && !body.mocked, geofence: fence.geofence };
 }
 
 export async function checkIn(user, body) {

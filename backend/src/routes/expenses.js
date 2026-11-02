@@ -8,7 +8,7 @@ import { Expense } from '../models/index.js';
 import { notify } from '../services/messaging.js';
 import { dayDistanceKm } from '../services/tracking.js';
 import { rangeFromQuery } from '../utils/dates.js';
-import { badRequest, notFound, paged } from '../utils/http.js';
+import { badRequest, forbidden, notFound, paged } from '../utils/http.js';
 import { assertCanManage, userScopeFilter } from '../utils/scope.js';
 
 const r = Router();
@@ -57,7 +57,7 @@ export async function createExpense(user, b) {
   }
   if (doc.amount == null) throw badRequest('Amount is required');
   if (doc.category !== 'travel' && !doc.bills.length && doc.amount > 500) throw badRequest('Bills are required for claims above INR 500');
-  const exp = await Expense.create(doc);
+  const exp = await Expense.create({ ...doc, history: [{ status: 'pending', by: user._id }] });
   if (user.manager) notify(user.manager, { title: 'Expense claim', body: `${user.name} submitted INR ${exp.amount} (${exp.category})`, type: 'expense', data: { id: String(exp._id) } });
   return exp;
 }
@@ -100,6 +100,7 @@ r.post(
     if (exp.status !== 'pending') throw badRequest(`Claim already ${exp.status}`);
     const b = req.valid.body;
     Object.assign(exp, { status: b.status, approvedAmount: b.status === 'approved' ? (b.approvedAmount ?? exp.amount) : 0, reviewComment: b.comment, reviewedBy: req.user._id, reviewedAt: new Date() });
+    exp.history.push({ status: b.status, by: req.user._id, note: b.comment });
     await exp.save();
     notify(exp.user, { title: `Expense ${exp.status}`, body: `Your claim of INR ${exp.amount} dated ${exp.date} was ${exp.status}`, type: 'expense', data: { id: String(exp._id) } });
     res.json(exp);
@@ -111,7 +112,9 @@ r.post('/:id/reimburse', authorize(ADMINS), validate(z.object({ reference: z.str
   const exp = await Expense.findById(req.params.id);
   if (!exp) throw notFound();
   if (exp.status !== 'approved') throw badRequest('Only approved claims can be reimbursed');
+  if (String(exp.user) === String(req.user._id)) throw forbidden('You cannot reimburse your own claim');
   Object.assign(exp, { status: 'reimbursed', reimbursedAt: new Date(), reimbursementRef: req.valid.body.reference });
+  exp.history.push({ status: 'reimbursed', by: req.user._id, note: req.valid.body.reference });
   await exp.save();
   notify(exp.user, { title: 'Expense reimbursed', body: `INR ${exp.approvedAmount} has been reimbursed`, type: 'expense' });
   res.json(exp);

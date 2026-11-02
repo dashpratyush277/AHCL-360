@@ -14,7 +14,7 @@ Total time: about 60–75 minutes, plus a 15–20 minute walk or drive for the G
 |---|---|---|
 | 0.1 | API running: on the hosted server, or on your PC (`cd backend` → `npm run dev`) | ☐ |
 | 0.2 | For a demo with persistent data, use MongoDB (Docker/Atlas) + `npm run seed -- --reset` the morning of the demo | ☐ |
-| 0.3 | Admin panel open in the browser (hosted URL, or `cd admin` → `npm run dev` → http://localhost:5173), signed in as **9000000001 / Password@123** | ☐ |
+| 0.3 | Admin panel open in the browser (hosted URL, or `cd admin` → `npm run dev` → http://localhost:5173), signed in as **9000000001 / Password@123**, then the 6-digit code (admin sign-in is two-step; on the demo server the code is shown on screen) | ☐ |
 | 0.4 | Test APK built and installed on an Android phone (docs/DEPLOYMENT.md §1) – **not Expo Go** | ☐ |
 | 0.5 | On the phone: login screen → *Server … · Change* → correct server address → **Test** shows ✓ | ☐ |
 | 0.6 | Phone permissions: Location = **Allow all the time**, Notifications = on, Battery = **Unrestricted** | ☐ |
@@ -37,7 +37,7 @@ Demo accounts (password **Password@123**, or OTP):
 ## 1. Live GPS tracking
 
 **Phone (Sneha, 9000000003):**
-1. Sign in → **Home**. Show *Office hours* and *GPS tracking: Off – Not checked in*.
+1. On the login screen tap **Employee Login** and sign in → **Home**. Show the date, *Office hours* and the GPS badge (*Not checked in*).
 2. Tap **Check in**. Allow location "all the time" if asked. Show *GPS tracking: Active* and the Android notification
    *"AHCL 360 is tracking your route"*.
 3. Lock the phone and walk or drive for 15–20 minutes (at least 1–2 km). Optionally stop at a shop and use
@@ -86,7 +86,7 @@ Phone (Sneha) → **Sales** tab:
 
 ## 4. Channel partner panel
 
-Phone → More → **Log out** → sign in as **Channel Partner**, mobile **9100000002**.
+Phone → More → **Log out** → tap **Distributor Login**, mobile **9100000002**.
 1. **Home**: orders, stock, retailers, reorder suggestions.
 2. **Retailers → Onboard new retailer** → name, mobile, *Capture shop GPS location*, PAN + photo → Save →
    "Linked to distributor code DS-OD-101". Show search/filter/sort. Admin → **Retailers** → open it → **Verify KYC**.
@@ -97,6 +97,9 @@ Phone → More → **Log out** → sign in as **Channel Partner**, mobile **9100
    words. **Inventory** shows the delivered goods added automatically.
 6. More → **Claims → Submit new claim** → scheme, amount, attach bill → Submit. Admin → **Approvals → Partner claims**
    → *Ask revision* → phone shows *Revise & resubmit* → resubmit → admin **Approve** → **Mark settled**.
+7. **Return (review test T06)**: admin → the delivered order → **Record return…** → 2 units, reason *Damaged in
+   transit* → **Issue credit note**. The order becomes *Partially returned*, a `CN/…` GST credit note PDF is available to
+   admin and on the phone (order details → *Returns & credit notes*), and **Inventory** shows the goods taken out.
 
 ## 5. Offline functionality
 
@@ -130,8 +133,15 @@ Requires §2 and §3 of DEPLOYMENT.md (shown as *Live* on the admin **Dashboard 
 3. **Auto logout**: leave the app idle (default 30 minutes) → signed out.
 4. **Encryption**: PAN/Aadhaar/bank numbers and every uploaded file are AES-256 encrypted in storage and masked in
    the app. (Optional: open the database in MongoDB Compass and show `kyc.aadhaar: "enc:v1:…"`.)
-5. **Other controls**: OTP is hashed, expires in 5 minutes, limited attempts and resend throttle; passwords hashed
-   (bcrypt); HTTPS in production; audit log of admin actions (**Broadcast** page → *Recent admin activity*).
+5. **Admin two-step sign-in**: sign out of the admin panel and sign in again – password, then a 6-digit code.
+6. **Lock-out**: on the phone enter a wrong password 5 times → "Too many failed attempts"; then show **Forgot password?**
+   (OTP → new password; all other sessions are signed out).
+7. **No self-approval**: as the manager, submit an expense and try to approve it in the admin panel → refused.
+8. **Fake GPS**: if a mock-location app is installed on a test phone, a visit started with it shows *Location mismatch –
+   mock (fake) GPS location*.
+9. **Other controls**: OTP is hashed, expires in 5 minutes, limited attempts and resend throttle; passwords hashed
+   (bcrypt); HTTPS in production; audit log of admin actions (**Broadcast** page → *Recent admin activity*);
+   automated evidence for every review test case in [TEST_REPORT.md](TEST_REPORT.md).
 
 ## 8. Real-phone checklist
 

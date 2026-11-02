@@ -1,5 +1,6 @@
 import { Suspense, lazy, useCallback, useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import logoWhite from './assets/logo-white.png';
 import { Button, Spinner } from './components/ui.jsx';
 import { api, setSession } from './lib/api';
 import { useApi, useIdleLogout, useSession } from './lib/hooks';
@@ -55,7 +56,8 @@ function Shell({ session }) {
     <div className="layout">
       <aside className={`sidebar ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(false)}>
         <div className="brand">
-          <span className="brand-mark">360</span> AHCL Admin
+          <img src={logoWhite} alt="AHCL – ADC Hindustan Corporation Limited" />
+          <span className="brand-sub">AHCL 360° · ADMIN</span>
         </div>
         <nav className="nav">
           {NAV.map(([group, links]) => (

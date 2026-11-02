@@ -21,6 +21,7 @@ WORKDIR /app/backend
 COPY backend/package.json backend/package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY backend/src ./src
+COPY backend/assets ./assets
 COPY --from=admin /build/admin/dist /app/admin-dist
 # Encrypted uploads live on a volume so they survive redeploys.
 RUN mkdir -p /data/uploads && chown -R node:node /data

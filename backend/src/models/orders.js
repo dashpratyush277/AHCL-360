@@ -32,7 +32,7 @@ const orderItem = {
   lineTotal: Number,
 };
 
-export const ORDER_STATUSES = ['processing', 'packed', 'shipped', 'delivered', 'cancelled'];
+export const ORDER_STATUSES = ['processing', 'packed', 'shipped', 'delivered', 'partially_returned', 'returned', 'cancelled'];
 
 const orderSchema = new Schema(
   {
@@ -52,6 +52,8 @@ const orderSchema = new Schema(
     notes: String,
     invoice: ref('Invoice'),
     stockPosted: { type: Boolean, default: false },
+    // Goods returned after delivery (each return has a GST credit note)
+    returns: [{ creditNote: ref('CreditNote'), items: [{ product: ref('Product'), qty: Number }], reason: String, at: { type: Date, default: Date.now }, by: ref('User') }],
   },
   { timestamps: true },
 );
@@ -95,4 +97,50 @@ const invoiceSchema = new Schema(
   },
   { timestamps: true },
 );
+// One tax invoice per order, enforced by the database (no duplicates under concurrent requests).
+invoiceSchema.index({ order: 1 }, { unique: true, partialFilterExpression: { order: { $exists: true } } });
 export const Invoice = mongoose.model('Invoice', invoiceSchema);
+
+const gstLine = {
+  product: ref('Product'),
+  name: String,
+  hsn: String,
+  qty: Number,
+  unit: String,
+  rate: Number,
+  discountPct: Number,
+  taxable: Number,
+  gstRate: Number,
+  cgst: Number,
+  sgst: Number,
+  igst: Number,
+  total: Number,
+};
+
+/** GST credit note issued for goods returned against an invoice. */
+const creditNoteSchema = new Schema(
+  {
+    creditNoteNo: { type: String, unique: true },
+    order: { ...ref('Order'), required: true, index: true },
+    invoice: ref('Invoice'),
+    invoiceNo: String,
+    distributor: { ...ref('Distributor'), required: true, index: true },
+    issuedAt: { type: Date, default: Date.now },
+    seller: { name: String, gstin: String, address: String, stateCode: String },
+    buyer: { name: String, gstin: String, address: String, stateCode: String },
+    placeOfSupply: String,
+    interState: Boolean,
+    reason: { type: String, required: true },
+    items: [gstLine],
+    taxableTotal: Number,
+    cgstTotal: Number,
+    sgstTotal: Number,
+    igstTotal: Number,
+    roundOff: Number,
+    grandTotal: Number,
+    amountInWords: String,
+    createdBy: ref('User'),
+  },
+  { timestamps: true },
+);
+export const CreditNote = mongoose.model('CreditNote', creditNoteSchema);

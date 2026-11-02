@@ -58,7 +58,7 @@ TaskManager.defineTask(TRACKING_TASK, async ({ data, error }) => {
   }
   const buf = JSON.parse((await AsyncStorage.getItem(BUFFER_KEY)) || '[]');
   for (const l of data.locations) {
-    buf.push({ lat: l.coords.latitude, lng: l.coords.longitude, accuracy: l.coords.accuracy, speed: l.coords.speed, recordedAt: new Date(l.timestamp).toISOString() });
+    buf.push({ lat: l.coords.latitude, lng: l.coords.longitude, accuracy: l.coords.accuracy, speed: l.coords.speed, ...(l.mocked ? { mocked: true } : {}), recordedAt: new Date(l.timestamp).toISOString() });
   }
   await AsyncStorage.setItem(BUFFER_KEY, JSON.stringify(buf.slice(-2000)));
   const res = await uploadBuffer();
@@ -82,7 +82,7 @@ export async function currentPosition() {
   const { status } = await Location.requestForegroundPermissionsAsync();
   if (status !== 'granted') throw new Error('Location permission is required');
   const p = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-  return { lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy };
+  return { lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy, ...(p.mocked ? { mocked: true } : {}) };
 }
 
 /**

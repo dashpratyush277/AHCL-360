@@ -1,6 +1,6 @@
 import { isAdmin } from '../config/roles.js';
 import { Distributor, User } from '../models/index.js';
-import { forbidden } from './http.js';
+import { forbidden, notFound } from './http.js';
 
 /**
  * User ids whose data the requester may see:
@@ -22,7 +22,9 @@ export async function userScopeFilter(user, requestedUserId, field = 'user') {
   return ids ? { [field]: { $in: ids } } : {};
 }
 
+/** Manager/admin may act on targetUserId's records – never on their own (no self-approval). */
 export async function assertCanManage(manager, targetUserId) {
+  if (String(manager._id) === String(targetUserId)) throw forbidden('You cannot approve or manage your own request – it goes to your manager');
   if (isAdmin(manager)) return;
   const subs = await User.subordinateIds(manager._id);
   if (!subs.some((id) => String(id) === String(targetUserId))) throw forbidden('This user does not report to you');
@@ -57,6 +59,15 @@ export async function distributorScopeFilter(user, requested, field = 'distribut
   return ids ? { [field]: { $in: ids } } : {};
 }
 
+/**
+ * Guard for a specific record owned by a distributor (order, invoice, claim, retailer, stock).
+ * Records of another distributor answer 404 exactly like missing ones, so IDs can't be probed.
+ */
 export async function assertDistributorAccess(user, distributorId) {
-  await distributorScopeFilter(user, distributorId);
+  try {
+    await distributorScopeFilter(user, distributorId);
+  } catch (err) {
+    if (err.status === 403) throw notFound('Not found');
+    throw err;
+  }
 }

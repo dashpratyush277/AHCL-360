@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
 import { env } from '../config/env.js';
@@ -67,24 +68,53 @@ export async function sendTableReport(res, { title, subtitle, columns, rows, for
   doc.end();
 }
 
+const NAVY = '#082239';
+// AHCL logo (generated from branding/ahcl-logo-source.png by branding/make_assets.py)
+const LOGO = (() => {
+  try {
+    return fs.readFileSync(new URL('../../assets/logo.png', import.meta.url));
+  } catch {
+    return null;
+  }
+})();
+
+/** Logo top-left, then the document title. Returns nothing; leaves doc.y below the header. */
+function brandBar(doc, rightText) {
+  const top = doc.y;
+  if (LOGO) doc.image(LOGO, doc.page.margins.left, top, { height: 46 });
+  doc.font('Helvetica').fontSize(8).fillColor('#555').text(rightText || '', doc.page.margins.left, top + 4, { align: 'right' }).fillColor('black');
+  doc.moveTo(doc.page.margins.left, top + 52).lineTo(doc.page.width - doc.page.margins.right, top + 52).lineWidth(1.5).strokeColor(NAVY).stroke();
+  doc.y = top + 60;
+  doc.x = doc.page.margins.left;
+}
+
 function header(doc, title, subtitle) {
-  doc.font('Helvetica-Bold').fontSize(16).text(`${env.company.name} 360°`, { continued: true }).font('Helvetica').fontSize(10).text(`   Generated ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`, { align: 'right' });
-  doc.moveDown(0.3).font('Helvetica-Bold').fontSize(13).text(title);
+  brandBar(doc, `${env.company.name} 360°  |  Generated ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`);
+  doc.font('Helvetica-Bold').fontSize(13).fillColor(NAVY).text(title).fillColor('black');
   if (subtitle) doc.font('Helvetica').fontSize(9).fillColor('#555').text(subtitle).fillColor('black');
   doc.moveDown(0.6);
 }
 
-/** GST tax invoice PDF. */
-export function sendInvoicePdf(res, inv) {
+const ist = (d) => new Date(d).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+/**
+ * GST tax invoice PDF; also used for credit notes (opts.title = 'CREDIT NOTE').
+ */
+export function sendInvoicePdf(res, inv, opts = {}) {
+  const title = opts.title || 'TAX INVOICE';
+  const number = opts.number || inv.invoiceNo;
   const doc = new PDFDocument({ size: 'A4', margin: 36 });
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${inv.invoiceNo.replace(/\//g, '-')}.pdf"`);
+  res.setHeader('Content-Disposition', `attachment; filename="${number.replace(/\//g, '-')}.pdf"`);
   doc.pipe(res);
 
-  doc.font('Helvetica-Bold').fontSize(16).text('TAX INVOICE', { align: 'center' }).moveDown(0.5);
+  brandBar(doc, 'Original for recipient');
+  doc.font('Helvetica-Bold').fontSize(16).fillColor(NAVY).text(title, { align: 'center' }).fillColor('black').moveDown(0.5);
   const top = doc.y;
   doc.fontSize(9).font('Helvetica-Bold').text(inv.seller.name, 36, top).font('Helvetica').text(inv.seller.address, { width: 250 }).text(`GSTIN: ${inv.seller.gstin}`).text(`State code: ${inv.seller.stateCode}`);
-  doc.font('Helvetica-Bold').text(`Invoice No: ${inv.invoiceNo}`, 330, top).font('Helvetica').text(`Date: ${new Date(inv.issuedAt).toLocaleDateString('en-IN')}`, 330).text(`Place of supply: ${inv.placeOfSupply || '-'}`, 330).text(`Reverse charge: No`, 330);
+  doc.font('Helvetica-Bold').text(`${opts.title ? 'Credit Note' : 'Invoice'} No: ${number}`, 330, top).font('Helvetica').text(`Date: ${ist(inv.issuedAt)}`, 330).text(`Place of supply: ${inv.placeOfSupply || '-'}`, 330).text(`Reverse charge: No`, 330);
+  if (opts.ref) doc.text(opts.ref, 330);
+  if (opts.reason) doc.text(`Reason: ${opts.reason}`, 330, doc.y, { width: 225 });
   doc.moveDown(1.5);
   doc.font('Helvetica-Bold').text('Bill To:', 36).font('Helvetica').text(inv.buyer.name).text(inv.buyer.address || '', { width: 260 }).text(`GSTIN: ${inv.buyer.gstin || 'Unregistered'}`);
   doc.moveDown();
@@ -126,7 +156,7 @@ export function sendInvoicePdf(res, inv) {
   doc.font('Helvetica-Bold');
   line('Grand Total (INR)', inr(inv.grandTotal));
   doc.moveDown().font('Helvetica-Oblique').fontSize(9).text(inv.amountInWords, 36);
-  doc.moveDown(3).font('Helvetica').fontSize(8).text('This is a computer-generated invoice.', 36, doc.y, { align: 'center' });
+  doc.moveDown(3).font('Helvetica').fontSize(8).text(`This is a computer-generated ${title.toLowerCase()}.`, 36, doc.y, { align: 'center' });
   doc.end();
 }
 

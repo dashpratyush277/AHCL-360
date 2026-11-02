@@ -29,6 +29,7 @@ const pingsSchema = z.object({
         lat: z.number().min(-90).max(90),
         lng: z.number().min(-180).max(180),
         accuracy: z.number().optional(),
+        mocked: z.boolean().optional(),
         speed: z.number().nullable().optional(),
         battery: z.number().optional(),
         recordedAt: z.coerce.date(),

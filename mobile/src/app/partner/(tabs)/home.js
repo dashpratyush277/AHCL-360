@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import BrandHeader from '../../../components/BrandHeader';
 import SyncBanner from '../../../components/SyncBanner';
 import { Badge, Button, Card, ListItem, Row, Screen, Section, Stat, StatRow, T } from '../../../components/ui';
 import { useAuth } from '../../../lib/auth';
@@ -15,13 +16,11 @@ export default function PartnerHome() {
 
   return (
     <Screen onRefresh={() => Promise.all([dash.reload(), orders.reload(), reorder.reload(), notes.reload()])} refreshing={dash.loading}>
-      <Row style={{ justifyContent: 'space-between' }}>
-        <Row gap={4} style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-          <T size={20} weight="800">{user?.distributor?.name || user?.name}</T>
-          <T muted>{label(user?.role)}{user?.distributor?.code ? ` · ${user.distributor.code}` : ''}</T>
-        </Row>
-        <Button small variant="ghost" icon="notifications-outline" title={notes.data?.unread ? String(notes.data.unread) : undefined} onPress={() => router.push('/common/notifications')} />
-      </Row>
+      <BrandHeader
+        title={user?.distributor?.name || user?.name}
+        subtitle={`${label(user?.role)}${user?.distributor?.code ? ` · ${user.distributor.code}` : ''}`}
+        unread={notes.data?.unread}
+      />
       <SyncBanner />
       <Button title="Place new order" icon="add" onPress={() => router.push('/partner/order-new')} />
       <StatRow>

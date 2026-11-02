@@ -10,15 +10,23 @@ import { api, getSession } from './api';
  */
 const QUEUE_KEY = 'ahcl_offline_queue_v1';
 const FAILED_KEY = 'ahcl_offline_failed_v1';
+const STATS_KEY = 'ahcl_sync_stats_v1'; // { synced: number, lastSyncAt: ISO }
 const listeners = new Set();
 let flushing = false;
 
 const read = async (k) => JSON.parse((await AsyncStorage.getItem(k)) || '[]');
 const write = (k, v) => AsyncStorage.setItem(k, JSON.stringify(v));
+const readStats = async () => JSON.parse((await AsyncStorage.getItem(STATS_KEY)) || '{"synced":0}');
+
+/** Record a successful round-trip to the server (online save or offline upload). */
+async function markSynced(count = 0) {
+  const s = await readStats();
+  await AsyncStorage.setItem(STATS_KEY, JSON.stringify({ synced: s.synced + count, lastSyncAt: new Date().toISOString() }));
+}
 
 async function emit() {
-  const [queue, failed] = await Promise.all([read(QUEUE_KEY), read(FAILED_KEY)]);
-  listeners.forEach((l) => l({ pending: queue.length, failed }));
+  const [queue, failed, stats] = await Promise.all([read(QUEUE_KEY), read(FAILED_KEY), readStats()]);
+  listeners.forEach((l) => l({ pending: queue.length, failed, synced: stats.synced, lastSyncAt: stats.lastSyncAt }));
 }
 export function onQueueChange(fn) {
   listeners.add(fn);
@@ -42,7 +50,9 @@ export async function enqueue(type, payload) {
 export async function submitOrQueue(type, payload, online) {
   const withId = { ...payload, clientId: payload.clientId || randomUUID() };
   try {
-    return { queued: false, clientId: withId.clientId, result: await online(withId) };
+    const result = await online(withId);
+    markSynced(0).then(emit);
+    return { queued: false, clientId: withId.clientId, result };
   } catch (e) {
     if (!e.isNetwork) throw e;
     await enqueue(type, withId);
@@ -68,6 +78,7 @@ export async function flushQueue() {
       await write(FAILED_KEY, failed.slice(-50));
       queue = (await read(QUEUE_KEY)).filter((op) => !done.has(op.clientId));
       await write(QUEUE_KEY, queue);
+      await markSynced(results.filter((r) => r.status === 'ok' || r.status === 'duplicate').length);
       if (done.size === 0) break;
     }
   } catch {
@@ -80,6 +91,21 @@ export async function flushQueue() {
 
 export async function clearFailed() {
   await write(FAILED_KEY, []);
+  emit();
+}
+
+/** Recovery path for a permanently failed entry: send it again (new id) or discard it. */
+export async function retryFailed(clientId) {
+  const failed = await read(FAILED_KEY);
+  const item = failed.find((f) => f.clientId === clientId);
+  if (!item) return;
+  await write(FAILED_KEY, failed.filter((f) => f.clientId !== clientId));
+  const { error: _e, clientId: _old, ...op } = item;
+  await enqueue(op.type, { ...op.payload, clientId: randomUUID() });
+  flushQueue();
+}
+export async function discardFailed(clientId) {
+  await write(FAILED_KEY, (await read(FAILED_KEY)).filter((f) => f.clientId !== clientId));
   emit();
 }
 

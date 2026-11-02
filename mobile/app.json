@@ -20,7 +20,7 @@
     "android": {
       "package": "com.ahcl.app360",
       "adaptiveIcon": {
-        "backgroundColor": "#E3F2EC",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -59,7 +59,8 @@
       [
         "expo-notifications",
         {
-          "color": "#0F6E4F",
+          "icon": "./assets/notification-icon.png",
+          "color": "#082239",
           "defaultChannel": "default"
         }
       ],
@@ -70,7 +71,20 @@
           "cameraPermission": "Take photos of bills and KYC documents."
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF",
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#082239"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

@@ -12,9 +12,10 @@ export default function OrderDetail() {
   const t = useTheme();
   const { id } = useLocalSearchParams();
   const { data: o, loading, reload } = useApi(`/orders/${id}`);
+  const cns = useApi(`/credit-notes?order=${id}`);
   const [run, busy] = useBusy();
   if (!o) return <Empty loading={loading} />;
-  const stepIdx = STEPS.indexOf(o.status);
+  const stepIdx = ['partially_returned', 'returned'].includes(o.status) ? STEPS.length - 1 : STEPS.indexOf(o.status);
 
   const cancel = () =>
     Alert.alert('Cancel order?', o.orderNo, [
@@ -54,6 +55,17 @@ export default function OrderDetail() {
       <Card title="Status history">
         {o.statusHistory.map((h, i) => <KV key={i} k={label(h.status)} v={dt(h.at)} />)}
       </Card>
+      {cns.data?.items?.length > 0 && (
+        <Card title="Returns & credit notes">
+          {cns.data.items.map((c) => (
+            <View key={c._id} style={{ gap: 4 }}>
+              <KV k={c.creditNoteNo} v={`Credit ${inr(c.grandTotal)}`} />
+              <T muted size={12}>{dt(c.issuedAt)} · {c.reason}</T>
+              <Button small variant="ghost" icon="download-outline" title="Credit note PDF" disabled={busy} onPress={() => run(() => api.downloadAndShare(`/credit-notes/${c._id}/pdf`, `${c.creditNoteNo}.pdf`))} />
+            </View>
+          ))}
+        </Card>
+      )}
       {o.invoice && <Button title="Download GST invoice (PDF)" icon="download-outline" loading={busy} onPress={() => run(() => api.downloadAndShare(`/invoices/${o.invoice._id}/pdf`, `${o.invoice.invoiceNo}.pdf`))} />}
       {o.status === 'processing' && <Button title="Cancel order" variant="danger" onPress={cancel} />}
     </Screen>

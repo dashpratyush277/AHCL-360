@@ -28,9 +28,28 @@ export async function storeFiles(user, files, purpose = 'other') {
 
 const toDto = (f) => ({ id: f._id, name: f.originalName, mimeType: f.mimeType, size: f.size, purpose: f.purpose, url: `/api/files/${f._id}` });
 
+/**
+ * The declared MIME type comes from the client, so check the file's real signature too.
+ * Rejects e.g. an executable renamed to bill.pdf.
+ */
+export function sniffType(buf) {
+  const head = buf.subarray(0, 16);
+  if (head.subarray(0, 5).toString('latin1') === '%PDF-') return 'application/pdf';
+  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return 'image/jpeg';
+  if (head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png';
+  if (head.subarray(0, 4).toString('latin1') === 'RIFF' && head.subarray(8, 12).toString('latin1') === 'WEBP') return 'image/webp';
+  if (head.subarray(4, 8).toString('latin1') === 'ftyp' && /^(heic|heix|hevc|mif1|msf1)/.test(head.subarray(8, 12).toString('latin1'))) return 'image/heic';
+  return null;
+}
+
 /** POST /api/files  (multipart, field "files", optional "purpose") */
 r.post('/', upload.array('files', 10), async (req, res) => {
   if (!req.files?.length) throw badRequest('No files uploaded (field name: files)');
+  for (const f of req.files) {
+    const real = sniffType(f.buffer);
+    if (!real) throw badRequest(`${f.originalname}: not a valid PDF or image file`);
+    f.mimetype = real; // trust the content, not the label
+  }
   const docs = await storeFiles(req.user, req.files, req.body.purpose);
   res.status(201).json({ files: docs.map(toDto) });
 });
@@ -49,7 +68,7 @@ async function canRead(user, file) {
 r.get('/:id', async (req, res) => {
   const file = await File.findById(req.params.id);
   if (!file) throw notFound('File not found');
-  if (!(await canRead(req.user, file))) throw forbidden();
+  if (!(await canRead(req.user, file))) throw notFound('File not found'); // same answer as a missing file
   const data = await getFile(file.storageName);
   res.setHeader('Content-Type', file.mimeType);
   res.setHeader('Content-Disposition', `${req.query.download ? 'attachment' : 'inline'}; filename="${encodeURIComponent(file.originalName || 'file')}"`);

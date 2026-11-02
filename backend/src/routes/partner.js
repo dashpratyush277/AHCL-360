@@ -3,13 +3,14 @@ import { z } from 'zod';
 import { ADMINS, MANAGERS, isAdmin } from '../config/roles.js';
 import { authorize } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { Claim, Distributor, File, Invoice, Order, ORDER_STATUSES, Retailer, User, nextNumber } from '../models/index.js';
-import { createInvoiceForOrder, priceOrderItems } from '../services/billing.js';
+import { Claim, CreditNote, Distributor, File, Invoice, Order, ORDER_STATUSES, Retailer, StockTxn, User, nextNumber } from '../models/index.js';
+import { createCreditNote, createInvoiceForOrder, priceOrderItems } from '../services/billing.js';
 import { sendInvoicePdf } from '../services/documents.js';
 import { notify } from '../services/messaging.js';
 import { recordStock } from '../services/stock.js';
 import { rangeFromQuery } from '../utils/dates.js';
-import { badRequest, escapeRegex, forbidden, notFound, paged } from '../utils/http.js';
+import { label } from '../utils/format.js';
+import { badRequest, conflict, escapeRegex, forbidden, notFound, paged } from '../utils/http.js';
 import { assertDistributorAccess, distributorScopeFilter } from '../utils/scope.js';
 
 const r = Router();
@@ -76,37 +77,101 @@ r.get('/orders/:id', async (req, res) => {
   res.json(order);
 });
 
-const NEXT = { processing: ['packed', 'cancelled'], packed: ['shipped', 'cancelled'], shipped: ['delivered'], delivered: [], cancelled: [] };
+// Allowed manual transitions. Returns after delivery go through POST /orders/:id/returns.
+const NEXT = { processing: ['packed', 'cancelled'], packed: ['shipped', 'cancelled'], shipped: ['delivered'], delivered: [], partially_returned: [], returned: [], cancelled: [] };
 
 r.post(
   '/orders/:id/status',
   validate(z.object({ status: z.enum(ORDER_STATUSES), note: z.string().optional(), trackingInfo: z.string().optional() })),
   async (req, res) => {
-    const order = await Order.findById(req.params.id);
-    if (!order) throw notFound();
+    const current = await Order.findById(req.params.id);
+    if (!current) throw notFound();
+    await assertDistributorAccess(req.user, current.distributor);
     const { status, note, trackingInfo } = req.valid.body;
-    const partnerCancel = req.user.userType === 'partner' && status === 'cancelled' && order.status === 'processing';
+    const partnerCancel = req.user.userType === 'partner' && status === 'cancelled' && current.status === 'processing';
     if (!isAdmin(req.user) && !partnerCancel) throw forbidden('Only admin can update order status');
-    await assertDistributorAccess(req.user, order.distributor);
-    if (!NEXT[order.status].includes(status)) throw badRequest(`Cannot move order from ${order.status} to ${status}`);
+    if (!NEXT[current.status].includes(status)) throw badRequest(`Cannot move order from ${current.status} to ${status}`);
 
-    order.status = status;
-    if (trackingInfo) order.trackingInfo = trackingInfo;
-    order.statusHistory.push({ status, at: new Date(), by: req.user._id, note });
-    await order.save();
+    // Compare-and-set: only succeeds if nobody changed the status in the meantime, so two
+    // simultaneous "packed" clicks cannot both run (no duplicate invoice / double stock).
+    const order = await Order.findOneAndUpdate(
+      { _id: current._id, status: current.status },
+      {
+        $set: { status, ...(trackingInfo ? { trackingInfo } : {}) },
+        $push: { statusHistory: { status, at: new Date(), by: req.user._id, note } },
+      },
+      { returnDocument: 'after' },
+    );
+    if (!order) throw conflict('This order was just updated by someone else. Refresh and try again.');
 
     const distributor = await Distributor.findById(order.distributor);
     if (status === 'packed') await createInvoiceForOrder(order, distributor);
-    // Delivered goods are automatically posted as Stock In for the distributor.
-    if (status === 'delivered' && !order.stockPosted) {
+    // Delivered goods are posted once as Stock In for the distributor (atomic flag).
+    if (status === 'delivered' && (await Order.updateOne({ _id: order._id, stockPosted: false }, { stockPosted: true })).modifiedCount) {
       for (const i of order.items) await recordStock({ distributor: order.distributor, product: i.product, type: 'in', qty: i.qty, reference: order.orderNo, createdBy: req.user._id });
-      order.stockPosted = true;
-      await order.save();
     }
-    notify(await partnerUsers(order.distributor), { title: `Order ${status}`, body: `${order.orderNo} is now ${status}${trackingInfo ? ` (${trackingInfo})` : ''}`, type: 'order', data: { id: String(order._id) } });
-    res.json(order);
+    notify(await partnerUsers(order.distributor), { title: `Order ${label(status)}`, body: `${order.orderNo} is now ${label(status)}${trackingInfo ? ` (${trackingInfo})` : ''}`, type: 'order', data: { id: String(order._id) } });
+    res.json(await Order.findById(order._id));
   },
 );
+
+/**
+ * Goods returned after delivery (damaged, expired, wrong item...). Creates a GST credit note,
+ * takes the goods out of the distributor's stock and records the return on the order.
+ */
+r.post(
+  '/orders/:id/returns',
+  authorize(ADMINS),
+  validate(z.object({ items: z.array(z.object({ product: objectId, qty: z.number().int().positive() })).min(1), reason: z.string().min(3) })),
+  async (req, res) => {
+    const order = await Order.findById(req.params.id);
+    if (!order) throw notFound();
+    if (!['delivered', 'partially_returned'].includes(order.status)) throw badRequest('Only delivered orders can be returned');
+    const returned = new Map();
+    for (const r_ of order.returns) for (const it of r_.items) returned.set(String(it.product), (returned.get(String(it.product)) || 0) + it.qty);
+
+    const lines = req.valid.body.items.map((x) => {
+      const orderItem = order.items.find((i) => String(i.product) === x.product);
+      if (!orderItem) throw badRequest('Product is not part of this order');
+      const left = orderItem.qty - (returned.get(x.product) || 0);
+      if (x.qty > left) throw badRequest(`Only ${left} ${orderItem.unit} of ${orderItem.name} can still be returned`);
+      return { orderItem, qty: x.qty };
+    });
+
+    const [distributor, invoice] = await Promise.all([Distributor.findById(order.distributor), Invoice.findOne({ order: order._id })]);
+    // Stock first: if the distributor no longer holds the goods, nothing else is written.
+    const posted = [];
+    try {
+      for (const l of lines) posted.push(await recordStock({ distributor: order.distributor, product: l.orderItem.product, type: 'return', qty: l.qty, reason: req.valid.body.reason, reference: order.orderNo, createdBy: req.user._id }));
+    } catch (err) {
+      for (const t of posted) await recordStock({ distributor: t.distributor, product: t.product, type: 'in', qty: t.qty, reference: `${order.orderNo} return rollback`, createdBy: req.user._id });
+      throw err;
+    }
+    const cn = await createCreditNote({ order, invoice, distributor, lines, reason: req.valid.body.reason, createdBy: req.user._id });
+    await StockTxn.updateMany({ _id: { $in: posted.map((t) => t._id) } }, { reference: `${order.orderNo} / ${cn.creditNoteNo}` });
+
+    order.returns.push({ creditNote: cn._id, items: lines.map((l) => ({ product: l.orderItem.product, qty: l.qty })), reason: req.valid.body.reason, by: req.user._id });
+    const allBack = order.items.every((i) => (returned.get(String(i.product)) || 0) + (lines.find((l) => l.orderItem === i)?.qty || 0) >= i.qty);
+    order.status = allBack ? 'returned' : 'partially_returned';
+    order.statusHistory.push({ status: order.status, at: new Date(), by: req.user._id, note: `${cn.creditNoteNo}: ${req.valid.body.reason}` });
+    await order.save();
+    notify(await partnerUsers(order.distributor), { title: 'Return processed', body: `${cn.creditNoteNo} for ${order.orderNo}: credit of INR ${cn.grandTotal}`, type: 'order', data: { id: String(order._id) } });
+    res.status(201).json({ order, creditNote: cn });
+  },
+);
+
+r.get('/credit-notes', async (req, res) => {
+  const scope = await distributorScopeFilter(req.user, req.query.distributor);
+  if (req.query.order) scope.order = req.query.order;
+  res.json(await paged(CreditNote, scope, req.query, { sort: { issuedAt: -1 }, populate: { path: 'order', select: 'orderNo' } }));
+});
+
+r.get('/credit-notes/:id/pdf', async (req, res) => {
+  const cn = await CreditNote.findById(req.params.id);
+  if (!cn) throw notFound();
+  await assertDistributorAccess(req.user, cn.distributor);
+  sendInvoicePdf(res, cn, { title: 'CREDIT NOTE', number: cn.creditNoteNo, ref: cn.invoiceNo ? `Against invoice ${cn.invoiceNo}` : undefined, reason: cn.reason });
+});
 
 /* --------------------------------- Invoices --------------------------------- */
 

@@ -6,8 +6,9 @@ import { pushStatus } from './services/messaging.js';
 import { smsConfigProblems } from './services/otpDelivery.js';
 
 const { inMemory } = await connectDb();
-// In-memory dev DB always gets demo data; a real DB only when SEED_DEMO=true (e.g. a hosted demo server).
-if (inMemory || process.env.SEED_DEMO === 'true') {
+// In-memory dev DB always gets demo data. A real DB only when SEED_DEMO=true – and in production only on
+// a server explicitly marked as a demo (DEMO_MODE=true), so live business data never receives demo accounts.
+if (inMemory || (process.env.SEED_DEMO === 'true' && (!env.isProd || env.demoMode))) {
   const { seed } = await import('./seed.js');
   await seed();
 }

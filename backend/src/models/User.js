@@ -47,6 +47,9 @@ const userSchema = new Schema(
     blockedReason: String,
     // Incremented to invalidate every issued token (block, password change, forced logout).
     tokenVersion: { type: Number, default: 0 },
+    // Brute-force protection for password logins
+    failedLogins: { type: Number, default: 0, select: false },
+    lockedUntil: { type: Date, select: false },
     fcmTokens: { type: [String], default: [], select: false },
     lastLoginAt: Date,
   },

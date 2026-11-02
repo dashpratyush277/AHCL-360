@@ -1,14 +1,16 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { Button, Card, Chips, Empty, KV, ListItem, Screen, Section, T } from '../../../components/ui';
+import { Button, Card, Chips, Empty, Input, KV, ListItem, Screen, Section, T } from '../../../components/ui';
+import { qs } from '../../../lib/api';
 import { date, inr, label } from '../../../lib/format';
 import { useApi } from '../../../lib/hooks';
 import { useTheme } from '../../../theme';
 
 export default function Sales() {
   const [tab, setTab] = useState('distributors');
-  const dists = useApi('/distributors?limit=100');
+  const [q, setQ] = useState('');
+  const dists = useApi(`/distributors${qs({ q, limit: 100 })}`);
   const targets = useApi('/targets');
   const dso = useApi('/dso?limit=30');
 
@@ -16,6 +18,7 @@ export default function Sales() {
     <Screen onRefresh={() => Promise.all([dists.reload(), targets.reload(), dso.reload()])} refreshing={dists.loading}>
       <Chips options={[['distributors', 'Distributors'], ['dso', 'Sales orders'], ['targets', 'Targets']]} value={tab} onChange={setTab} />
 
+      {tab === 'distributors' && <Input placeholder="Search distributor name or code…" value={q} onChangeText={setQ} autoCorrect={false} />}
       {tab === 'distributors' && (
         <Section title={`Mapped distributors (${dists.data?.total ?? 0})`}>
           {(dists.data?.items || []).map((d) => (

@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 const ref = (model) => ({ type: Schema.Types.ObjectId, ref: model });
 
-const punch = { time: Date, lat: Number, lng: Number, accuracy: Number, withinGeofence: Boolean, geofence: String };
+const punch = { time: Date, lat: Number, lng: Number, accuracy: Number, mocked: Boolean, withinGeofence: Boolean, geofence: String };
 
 const attendanceSchema = new Schema(
   {

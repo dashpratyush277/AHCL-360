@@ -42,19 +42,34 @@ const opsSchema = z.object({
 r.post('/', validate(opsSchema), async (req, res) => {
   const results = [];
   for (const op of req.valid.body.ops) {
-    const done = await SyncOp.findOne({ user: req.user._id, clientId: op.clientId }).lean();
-    if (done) {
-      results.push({ clientId: op.clientId, status: 'duplicate', result: done.result });
+    // 1. Claim the client id first. The unique (user, clientId) index means a concurrent or
+    //    repeated upload of the same op loses this race and gets the stored result instead.
+    let claim;
+    try {
+      claim = await SyncOp.create({ user: req.user._id, clientId: op.clientId, op: op.type, state: 'processing' });
+    } catch (err) {
+      if (err.code !== 11000) throw err;
+      const done = await SyncOp.findOne({ user: req.user._id, clientId: op.clientId }).lean();
+      results.push(
+        done.state === 'processing'
+          ? { clientId: op.clientId, status: 'error', error: 'Already being processed', retry: true }
+          : done.state === 'failed'
+            ? { clientId: op.clientId, status: 'error', error: done.error, retry: false }
+            : { clientId: op.clientId, status: 'duplicate', result: done.result },
+      );
       continue;
     }
+    // 2. Apply, then record the committed result on the claim.
     try {
       const out = await handlers[op.type](req, { ...op.payload, clientId: op.payload.clientId || op.clientId });
       const result = out?._id ? { id: String(out._id) } : out;
-      await SyncOp.create({ user: req.user._id, clientId: op.clientId, op: op.type, result });
+      await SyncOp.updateOne({ _id: claim._id }, { state: 'applied', result });
       results.push({ clientId: op.clientId, status: 'ok', result });
     } catch (err) {
-      // 4xx errors are permanent (app should drop/show them); others can be retried.
+      // 4xx errors are permanent (kept, shown to the user); others release the claim for a retry.
       const status = err.status || (err.name === 'ZodError' ? 400 : 500);
+      if (status >= 500) await SyncOp.deleteOne({ _id: claim._id });
+      else await SyncOp.updateOne({ _id: claim._id }, { state: 'failed', error: err.message });
       results.push({ clientId: op.clientId, status: 'error', error: err.message, retry: status >= 500 });
     }
   }

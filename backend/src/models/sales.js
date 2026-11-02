@@ -99,7 +99,22 @@ const stockTxnSchema = new Schema(
   { timestamps: true },
 );
 stockTxnSchema.index({ distributor: 1, product: 1, date: -1 });
+// An offline entry replayed twice can never create two ledger rows.
+stockTxnSchema.index({ distributor: 1, clientId: 1 }, { unique: true, partialFilterExpression: { clientId: { $type: 'string' } } });
 export const StockTxn = mongoose.model('StockTxn', stockTxnSchema);
+
+/**
+ * Running balance per distributor + product. Stock-reducing movements decrement it with an
+ * atomic conditional update (qty >= n), so two simultaneous requests can never take the last
+ * unit twice or drive stock negative – without needing multi-document transactions.
+ */
+const stockBalanceSchema = new Schema({
+  distributor: { ...ref('Distributor'), required: true },
+  product: { ...ref('Product'), required: true },
+  qty: { type: Number, required: true, default: 0 },
+});
+stockBalanceSchema.index({ distributor: 1, product: 1 }, { unique: true });
+export const StockBalance = mongoose.model('StockBalance', stockBalanceSchema);
 
 const reorderSchema = new Schema({
   distributor: { ...ref('Distributor'), required: true },

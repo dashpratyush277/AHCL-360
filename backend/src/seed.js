@@ -143,6 +143,12 @@ export async function seed({ reset = false } = {}) {
 if (process.argv[1]?.replace(/\\/g, '/').endsWith('src/seed.js')) {
   const { connectDb, disconnectDb } = await import('./config/db.js');
   await connectDb();
-  await seed({ reset: process.argv.includes('--reset') });
+  const reset = process.argv.includes('--reset');
+  const { env } = await import('./config/env.js');
+  if (env.isProd && !env.demoMode) {
+    console.error('Refusing to load demo data into a production database (set DEMO_MODE=true only on a demo server).');
+    process.exit(1);
+  }
+  await seed({ reset });
   await disconnectDb();
 }

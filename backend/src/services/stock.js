@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Product, ReorderSetting, StockTxn } from '../models/index.js';
+import { Product, ReorderSetting, StockBalance, StockTxn } from '../models/index.js';
 import { badRequest } from '../utils/http.js';
 
 const SIGN = { in: 1, out: -1, return: -1 };
@@ -13,12 +13,36 @@ export async function recordStock({ distributor, product, type, qty, delta, reas
     delta = SIGN[type] * qty;
   }
   if ((type === 'return' || type === 'adjustment') && !reason) throw badRequest(`Reason is required for ${type}`);
+  if (!Number.isSafeInteger(qty) || qty <= 0) throw badRequest('Quantity must be a positive whole number');
 
-  if (delta < 0) {
-    const [current] = await closingStock(distributor, { product });
-    if ((current?.closing ?? 0) + delta < 0) throw badRequest('Insufficient stock for this transaction');
+  await ensureBalance(distributor, product);
+  // Atomic: for reductions the update only matches while enough stock remains.
+  const moved = await StockBalance.findOneAndUpdate(
+    { distributor, product, ...(delta < 0 ? { qty: { $gte: -delta } } : {}) },
+    { $inc: { qty: delta } },
+    { returnDocument: 'after' },
+  );
+  if (!moved) throw badRequest('Insufficient stock for this transaction');
+  try {
+    return await StockTxn.create({ distributor, product, type, qty, delta, reason, reference, date, createdBy, clientId });
+  } catch (err) {
+    await StockBalance.updateOne({ distributor, product }, { $inc: { qty: -delta } }); // undo the balance change
+    throw err;
   }
-  return StockTxn.create({ distributor, product, type, qty, delta, reason, reference, date, createdBy, clientId });
+}
+
+/** Create the running-balance row from the ledger the first time a product is touched. */
+async function ensureBalance(distributor, product) {
+  if (await StockBalance.exists({ distributor, product })) return;
+  const [row] = await StockTxn.aggregate([
+    { $match: { distributor: new mongoose.Types.ObjectId(String(distributor)), product: new mongoose.Types.ObjectId(String(product)) } },
+    { $group: { _id: null, qty: { $sum: '$delta' } } },
+  ]);
+  try {
+    await StockBalance.create({ distributor, product, qty: row?.qty ?? 0 });
+  } catch (err) {
+    if (err.code !== 11000) throw err; // another request created it first – fine
+  }
 }
 
 /**

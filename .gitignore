@@ -28,3 +28,7 @@ mobile/web-build/
 # self-hosted deployment
 deploy/.env
 deploy/backups/
+
+# database backups contain personal data – never commit
+backups/
+backend/backups/

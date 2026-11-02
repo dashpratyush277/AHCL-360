@@ -4,7 +4,7 @@ import { api, qs } from '../lib/api';
 import { date, dt, inr, label } from '../lib/format';
 import { useApi, useDebounced } from '../lib/hooks';
 
-const NEXT = { processing: ['packed', 'cancelled'], packed: ['shipped', 'cancelled'], shipped: ['delivered'], delivered: [], cancelled: [] };
+const NEXT = { processing: ['packed', 'cancelled'], packed: ['shipped', 'cancelled'], shipped: ['delivered'], delivered: [], partially_returned: [], returned: [], cancelled: [] };
 
 export default function Orders() {
   const [tab, setTab] = useState('orders');
@@ -62,7 +62,10 @@ function OrderDetail({ id, onClose, onChanged }) {
   const [note, setNote] = useState('');
   const [tracking, setTracking] = useState('');
   const [run, busy] = useAction();
+  const [returning, setReturning] = useState(false);
+  const cns = useApi(`/credit-notes?order=${id}`);
   if (!o) return null;
+  const returnable = ['delivered', 'partially_returned'].includes(o.status);
   const move = (status) =>
     run(() => api.post(`/orders/${id}/status`, { status, note: note || undefined, trackingInfo: tracking || undefined }), `Order ${status}`)
       .then(() => { reload(); onChanged(); setNote(''); })
@@ -106,11 +109,80 @@ function OrderDetail({ id, onClose, onChanged }) {
           {o.status === 'packed' && <Field label="Tracking / LR number"><input value={tracking} onChange={(e) => setTracking(e.target.value)} /></Field>}
         </div>
       )}
+      {cns.data?.items?.length > 0 && (
+        <div className="stack" style={{ gap: 6, marginTop: 8 }}>
+          <strong>Returns / credit notes</strong>
+          {cns.data.items.map((c) => (
+            <div key={c._id} className="row gap-s">
+              <span className="mono">{c.creditNoteNo}</span>
+              <span className="muted">{dt(c.issuedAt)} · {c.reason} · credit {inr(c.grandTotal)}</span>
+              <Button size="s" variant="ghost" className="right" onClick={() => run(() => api.download(`/credit-notes/${c._id}/pdf`))}>PDF</Button>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="modal-foot">
         {o.invoice && <Button variant="ghost" onClick={() => run(() => api.download(`/invoices/${o.invoice._id}/pdf`))}>Download invoice</Button>}
+        {returnable && <Button variant="ghost" onClick={() => setReturning(true)}>Record return…</Button>}
         {NEXT[o.status].map((s) => (
           <Button key={s} disabled={busy} variant={s === 'cancelled' ? 'danger' : 'primary'} onClick={() => move(s)}>Mark {label(s)}</Button>
         ))}
+      </div>
+      {returning && (
+        <ReturnModal
+          order={o}
+          onClose={() => setReturning(false)}
+          onDone={() => {
+            setReturning(false);
+            reload();
+            cns.reload();
+            onChanged();
+          }}
+        />
+      )}
+    </Modal>
+  );
+}
+
+/** Goods coming back after delivery -> GST credit note + stock out of the distributor. */
+function ReturnModal({ order, onClose, onDone }) {
+  const [qty, setQty] = useState({});
+  const [reason, setReason] = useState('');
+  const [run, busy] = useAction();
+  const already = {};
+  for (const r of order.returns || []) for (const it of r.items) already[it.product] = (already[it.product] || 0) + it.qty;
+  const items = Object.entries(qty).filter(([, q]) => q > 0).map(([product, q]) => ({ product, qty: q }));
+  return (
+    <Modal open title={`Return against ${order.orderNo}`} onClose={onClose}>
+      <div className="stack">
+        {order.items.map((i) => {
+          const left = i.qty - (already[i.product] || 0);
+          return (
+            <Field key={i.product} label={`${i.name} – up to ${left} ${i.unit}`}>
+              <input
+                type="number"
+                min={0}
+                max={left}
+                disabled={!left}
+                value={qty[i.product] ?? ''}
+                onChange={(e) => setQty({ ...qty, [i.product]: Math.min(left, Math.max(0, Number(e.target.value))) })}
+              />
+            </Field>
+          );
+        })}
+        <Field label="Reason *">
+          <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Damaged in transit, expired, wrong item…" />
+        </Field>
+        <p className="muted" style={{ margin: 0 }}>A GST credit note is issued at the invoiced value and the goods are taken out of the distributor&apos;s stock.</p>
+      </div>
+      <div className="modal-foot">
+        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button
+          disabled={busy || !items.length || reason.trim().length < 3}
+          onClick={() => run(() => api.post(`/orders/${order._id}/returns`, { items, reason }), 'Return recorded – credit note issued').then(onDone).catch(() => {})}
+        >
+          Issue credit note
+        </Button>
       </div>
     </Modal>
   );
