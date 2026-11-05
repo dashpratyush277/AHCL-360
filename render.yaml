@@ -38,9 +38,9 @@ services:
         value: "true"
       - key: SMS_PROVIDER
         value: console
-      # Loads the demo accounts the first time (only into an empty database).
+      # Live data only – never load the demo accounts. Create the first admin with `npm run create-admin`.
       - key: SEED_DEMO
-        value: "true"
+        value: "false"
       - key: COMPANY_NAME
         value: AHCL
       - key: COMPANY_STATE_CODE
